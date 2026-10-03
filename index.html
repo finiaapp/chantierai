@@ -465,13 +465,14 @@ async function accepterInvitation(){
     }
 
     // 3) Marque l'invitation comme acceptée, par son identifiant précis (pas par email,
-    // qui pourrait correspondre à plusieurs invitations). On le signale si ça échoue,
-    // au lieu de le laisser passer silencieusement.
-    if(inv.invitation_id){
-      const majInvitation = await sbUpdate("Invitations", `id=eq.${inv.invitation_id}`, { statut:"acceptee" });
-      if(!majInvitation || !majInvitation[0]){
-        showToast("⚠ Le compte a été créé, mais le statut de l'invitation n'a pas pu être mis à jour (" + lastDbError + ").");
-      }
+    // qui pourrait correspondre à plusieurs invitations). Si un ancien lien ne porte pas
+    // cet identifiant (compte invité avant cette mise à jour), on retombe sur l'ancienne
+    // méthode par email plutôt que de ne rien faire silencieusement.
+    const majInvitation = inv.invitation_id
+      ? await sbUpdate("Invitations", `id=eq.${inv.invitation_id}`, { statut:"acceptee" })
+      : await sbUpdate("Invitations", `email=eq.${encodeURIComponent(inv.email)}&entreprise_id=eq.${inv.entreprise_id}&statut=eq.en_attente`, { statut:"acceptee" });
+    if(!majInvitation || !majInvitation[0]){
+      showToast("⚠ Le compte a été créé, mais le statut de l'invitation n'a pas pu être mis à jour (" + lastDbError + ").");
     }
 
     sauvegarderSession();
