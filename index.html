@@ -116,6 +116,7 @@ let state = {
   authError: "",
   modal: null, // 'modifierStatut' | 'ajouterDestinataire' | null
   invitations: [],
+  membres: [],
   invitationData: null
 };
 
@@ -356,15 +357,35 @@ async function chargerEspaceUtilisateur(){
 async function ouvrirGestionEntreprise(){
   state.modal = null;
   state.view = "gestionEntreprise";
-  render(); // affiche tout de suite, la liste des invitations arrive ensuite
-  await chargerInvitations();
+  render(); // affiche tout de suite, la liste arrive ensuite
+  await Promise.all([chargerInvitations(), chargerMembres()]);
   render();
 }
 
 async function chargerInvitations(){
   if(!state.entreprise || !state.entreprise.id) return;
-  const rows = await sbSelect("Invitations", `select=*&entreprise_id=eq.${state.entreprise.id}&order=created_at.desc`);
+  const rows = await sbSelect("Invitations", `select=*&entreprise_id=eq.${state.entreprise.id}&statut=eq.en_attente&order=created_at.desc`);
   state.invitations = rows || [];
+}
+
+async function chargerMembres(){
+  if(!state.entreprise || !state.entreprise.id) return;
+  const rows = await sbSelect("Utilisateurs", `select=*&entreprise_id=eq.${state.entreprise.id}&order=nom.asc`);
+  state.membres = rows || [];
+}
+
+async function annulerInvitation(id){
+  if(!confirm("Annuler cette invitation ?")) return;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/Invitations?id=eq.${id}`, {
+    method:"DELETE",
+    headers: authHeaders()
+  });
+  if(!res.ok){
+    showToast("Impossible d'annuler l'invitation: " + (await res.text()));
+    return;
+  }
+  await chargerInvitations();
+  render();
 }
 
 async function inviterMembre(){
@@ -388,7 +409,7 @@ async function inviterMembre(){
       showToast("Échec de l'invitation: " + (data.error || `erreur ${res.status}`));
       return;
     }
-    showToast(data.warning ? `Invitation envoyée à ${email} (⚠ ${data.warning})` : `Invitation envoyée à ${email}`);
+    showToast(`Invitation envoyée à ${email}`);
     emailEl.value = "";
     await chargerInvitations();
     render();
@@ -443,8 +464,15 @@ async function accepterInvitation(){
       return;
     }
 
-    // 3) Marque l'invitation comme acceptée (ne bloque pas la suite si ça échoue, l'email a déjà fonctionné)
-    await sbUpdate("Invitations", `email=eq.${encodeURIComponent(inv.email)}&entreprise_id=eq.${inv.entreprise_id}&statut=eq.en_attente`, { statut:"acceptee" });
+    // 3) Marque l'invitation comme acceptée, par son identifiant précis (pas par email,
+    // qui pourrait correspondre à plusieurs invitations). On le signale si ça échoue,
+    // au lieu de le laisser passer silencieusement.
+    if(inv.invitation_id){
+      const majInvitation = await sbUpdate("Invitations", `id=eq.${inv.invitation_id}`, { statut:"acceptee" });
+      if(!majInvitation || !majInvitation[0]){
+        showToast("⚠ Le compte a été créé, mais le statut de l'invitation n'a pas pu être mis à jour (" + lastDbError + ").");
+      }
+    }
 
     sauvegarderSession();
     await chargerEspaceUtilisateur();
@@ -961,18 +989,29 @@ function renderGestionEntreprise(){
     </div>
 
     <div class="muted" style="margin:16px 0 6px;">Membres de l'équipe</div>
-    <label>Courriel du membre</label><input type="email" id="ge-invite-email" placeholder="Ex: jean.tremblay@const...">
+    <div class="card">
+      ${(state.membres||[]).map(m=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+          <div><div style="font-size:13.5px;">${escapeHtml(m.nom||m.email)}</div><div class="muted" style="font-size:11.5px;">${escapeHtml(m.email)}</div></div>
+          <span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#E6F4EA;color:#1E7B34;">${escapeHtml(m.role||"")}</span>
+        </div>`).join("") || `<p class="muted">Aucun membre pour l'instant.</p>`}
+    </div>
+
+    <label style="margin-top:16px;">Courriel du membre à inviter</label><input type="email" id="ge-invite-email" placeholder="Ex: jean.tremblay@const...">
     <label>Rôle du membre</label>
     <select id="ge-invite-role">${(e.roles||[]).map(r=>`<option>${r}</option>`).join("")}</select>
     <button class="btn btn-primary" id="ge-invite-btn" onclick="inviterMembre()">Inviter un membre</button>
 
     ${state.invitations && state.invitations.length ? `
-    <div class="muted" style="margin:16px 0 6px;">Invitations envoyées</div>
+    <div class="muted" style="margin:16px 0 6px;">Invitations en attente</div>
     <div class="card">
       ${state.invitations.map(inv=>`
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
           <div><div style="font-size:13.5px;">${escapeHtml(inv.email)}</div><div class="muted" style="font-size:11.5px;">${escapeHtml(inv.role)}</div></div>
-          <span style="font-size:11px;padding:4px 8px;border-radius:5px;${inv.statut==='acceptee'?'background:#E6F4EA;color:#1E7B34;':'background:#FFF3CD;color:#7A5B00;'}">${inv.statut==='acceptee'?'Acceptée':'En attente'}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#FFF3CD;color:#7A5B00;">En attente</span>
+            <button onclick="annulerInvitation(${inv.id})" style="background:none;border:none;color:var(--refuse);font-size:12px;cursor:pointer;">Annuler</button>
+          </div>
         </div>`).join("")}
     </div>` : ""}
 
@@ -1258,7 +1297,8 @@ function attachHandlers(){
         email: u.email,
         role: u.user_metadata?.role || "Employé",
         entreprise_id: u.user_metadata?.entreprise_id || null,
-        entreprise_nom: u.user_metadata?.entreprise_nom || ""
+        entreprise_nom: u.user_metadata?.entreprise_nom || "",
+        invitation_id: u.user_metadata?.invitation_id || null
       };
       state.view = "accepterInvitation";
       render();
