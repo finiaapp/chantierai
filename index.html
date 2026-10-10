@@ -49,7 +49,7 @@
   .row > div{flex:1;}
   .status{font-size:12px;font-weight:700;padding:3px 8px;border-radius:5px;color:#fff;display:inline-block;}
   .status.Actif{background:var(--actif);} .status.Suspendu{background:var(--suspendu);}
-  .status.Refusé{background:var(--refuse);} .status.Envoyé{background:var(--envoye);}
+  .status.Refusé{background:var(--refuse);} .status.Terminé{background:#757575;} .status.Brouillon{background:#757575;} .status.AApprouver{background:var(--suspendu);} .status.Envoyé{background:var(--envoye);}
   .project-item{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
   .project-item:last-child{border-bottom:none;}
   .project-item .name{font-weight:600;} .project-item .addr{font-size:12px;color:var(--grey);}
@@ -101,15 +101,22 @@ let state = {
   projets: [],
   rapports: [], // tous rapports (mock/local + supabase)
   currentProjetId: null,
-  rapportForm: { titre:"", description:"", observations:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] },
+  rapportForm: { titre:"", description:"", observations:"", actions:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] },
   contenuGenere: "",
   currentRapportId: null,
   destinataires: [""],
   logoBase64: DEFAULT_LOGO_B64,
   photoSections: [],
+  photosChargees: [],
+  erreurPhotos: null,
+  enregistrementEnCours: false,
+  ouvertureEnCours: false,
   dbStatus: null,
   onboardingForm: { nom_entreprise:"", numero_rbq:"", adresse:"", email:"", contact_urgence:"", logoBase64:null, logoMimeType:null },
-  approbationActive: false,
+  rapportEnEdition: null,
+  enGeneration: false,
+  erreurGeneration: null,
+  contenuModifie: false,
   accessToken: null,
   authUser: null,
   typesProjets: [],
@@ -198,28 +205,85 @@ async function sbSignIn(email, password){
 }
 
 /* ================= IA via Edge Function Supabase (OpenAI côté serveur) ================= */
+const SECTIONS_RAPPORT = ["Résumé","Travaux effectués","Observations","Sécurité et EPI","Conditions et main-d'œuvre","Actions à prévoir","Points à vérifier"];
+const SECTIONS_PHOTO = ["Travaux effectués","Observations","Sécurité et EPI","Conditions et main-d'œuvre"];
+const SECTIONS_FACULTATIVES = ["Actions à prévoir","Points à vérifier"];
+const MAX_PHOTOS_RAPPORT = 8;
+
+function echapperRegex(t){ return t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+function parseSections(raw){
+  const sections = {};
+  SECTIONS_RAPPORT.forEach(sec=>{ sections[sec] = ""; });
+  const alternatives = SECTIONS_RAPPORT.map(echapperRegex).join("|");
+  const regex = new RegExp("##\\s*(" + alternatives + ")[ \\t]*\\n([\\s\\S]*?)(?=##\\s*(?:" + alternatives + ")|$)", "g");
+  let match, trouve = false;
+  // Tolère l'apostrophe courbe dans les titres (ex: main-d’œuvre)
+  const brut = (raw || "").replace(/^##[^\n]*$/gm, l => l.replace(/[\u2018\u2019]/g, "'"));
+  while((match = regex.exec(brut)) !== null){
+    sections[match[1].trim()] = match[2].trim();
+    trouve = true;
+  }
+  return { sections, trouve };
+}
+
+function assemblerSections(sections){
+  return SECTIONS_RAPPORT
+    .filter(sec => sections[sec] && sections[sec].trim())
+    .map(sec => `## ${sec}\n${sections[sec].trim()}`)
+    .join("\n\n");
+}
+
+function construireDepuisRapport(R){
+  const sections = {
+    "Résumé": R.resume || "",
+    "Travaux effectués": R.travaux_effectues || "",
+    "Observations": R.observations || "",
+    "Sécurité et EPI": R.securite_epi || "",
+    "Conditions et main-d'œuvre": R.conditions_main_oeuvre || "",
+    "Actions à prévoir": (R.actions_a_prevoir || []).map(x => "- " + x).join("\n"),
+    "Points à vérifier": (R.points_a_verifier || []).map(x => "- " + x).join("\n")
+  };
+  const photoSections = (R.photos || []).map(p => ({
+    photo: p.photo, section: p.section, legende: p.legende || "", certitude: p.certitude || ""
+  }));
+  return { texte: assemblerSections(sections), photoSections };
+}
+
+/* ================= IA via Edge Function Supabase (OpenAI côté serveur) ================= */
 async function genererRapportIA(form){
   try{
     const res = await fetch(`${SUPABASE_URL}/functions/v1/generer-rapport-ia`, {
       method:"POST",
       headers:{ ...authHeaders(), "Content-Type":"application/json" },
       body: JSON.stringify({
-        titre: form.titre, description: form.description, observations: form.observations,
+        titre: form.titre, description: form.description, observations: form.observations, actions: form.actions,
         visiteurs: form.visiteurs, epi: form.epi, meteo: form.meteo, nb_travailleurs: form.nb_travailleurs,
         photos: form.photos.map(p=>({ base64:p.base64, mediaType:p.mediaType }))
       })
     });
-    const data = await res.json();
-    if(!res.ok || data.error){ return { texte: `⚠ ERREUR Edge Function (${res.status}):\n${data.error || JSON.stringify(data)}`, photoSections: [] }; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || data.error){
+      return { erreur: `${data.error || "Erreur " + res.status}` };
+    }
+    // Nouveau format (JSON structuré)
+    if(data.rapport){
+      const r = construireDepuisRapport(data.rapport);
+      if(!r.texte.trim()) return { erreur: "L'IA a retourné un rapport vide. Réessaie." };
+      return r;
+    }
+    // Ancien format (texte + bloc ---PHOTOS---), conservé pour compatibilité
     const fullText = data.contenu || "";
     const [reportPart, jsonPart] = fullText.split("---PHOTOS---");
     let photoSections = [];
     if(jsonPart){
       try{ photoSections = JSON.parse(jsonPart.trim()); }catch(e){ console.warn("JSON photoSections invalide", e); }
     }
-    return { texte: (reportPart||fullText).trim(), photoSections };
+    const texte = (reportPart||fullText).trim();
+    if(!texte) return { erreur: "L'IA a retourné un rapport vide. Réessaie." };
+    return { texte, photoSections };
   }catch(e){
-    return { texte: `⚠ ERREUR RÉSEAU:\n${e.message || e}`, photoSections: [] };
+    return { erreur: "Erreur réseau: " + (e.message || e) };
   }
 }
 
@@ -318,7 +382,15 @@ async function chargerEspaceUtilisateur(){
     const inserted = await sbInsert("Utilisateurs", { nom: state.authUser.user_metadata?.nom || state.authUser.email, email: state.authUser.email, role:"Administrateur", actif:true, auth_id: state.authUser.id });
     profil = inserted && inserted[0];
   }
-  state.user = profil ? { nom: profil.nom, courriel: profil.email, id: profil.id, entreprise_id: profil.entreprise_id } : { nom: state.authUser.email, courriel: state.authUser.email };
+  // Compte désactivé par l'administrateur: on bloque l'accès, sans rien charger
+  if(profil && profil.actif === false){
+    effacerSession();
+    state.user = null; state.accessToken = null; state.authUser = null;
+    go("accueil");
+    showToast("Ton accès à cette entreprise a été désactivé. Contacte ton administrateur.");
+    return;
+  }
+  state.user = profil ? { nom: profil.nom, courriel: profil.email, id: profil.id, entreprise_id: profil.entreprise_id, role: profil.role || "Employé" } : { nom: state.authUser.email, courriel: state.authUser.email };
 
   // Important: on ne fait JAMAIS confiance à entreprise_id seul (la colonne a une valeur par défaut
   // héritée qui peut pointer vers une entreprise inexistante). On vérifie qu'elle existe vraiment.
@@ -354,7 +426,68 @@ async function chargerEspaceUtilisateur(){
 }
 
 /* ================= INVITATIONS D'ÉQUIPE ================= */
+function estAdmin(){ return !!(state.user && state.user.role === "Administrateur"); }
+
+function seDeconnecter(){
+  effacerSession();
+  state.user = null; state.accessToken = null; state.authUser = null;
+  go("accueil");
+}
+
+function ouvrirMenuProfil(){
+  if(estAdmin()) ouvrirGestionEntreprise(); else go("monProfil");
+}
+
+function messageErreurDb(){
+  const m = /"message":"([^"]+)"/.exec(lastDbError || "");
+  return m ? m[1] : (lastDbError || "erreur inconnue");
+}
+
+function nbAdminsActifs(){
+  return (state.membres || []).filter(m => m.role === "Administrateur" && m.actif !== false).length;
+}
+
+async function changerRoleMembre(id, nouveauRole){
+  const m = (state.membres || []).find(x => String(x.id) === String(id));
+  if(!m || m.role === nouveauRole){ render(); return; }
+  if(!confirm(`Changer le rôle de ${m.nom || m.email} en « ${nouveauRole} » ?`)){ render(); return; }
+  const r = await sbUpdate("Utilisateurs", `id=eq.${id}`, { role: nouveauRole });
+  if(r === null){
+    showToast("Changement de rôle refusé: " + messageErreurDb());
+  }else if(!r[0]){
+    showToast("Changement de rôle refusé: droits insuffisants.");
+  }else{
+    showToast(`Rôle mis à jour: ${m.nom || m.email} est maintenant ${nouveauRole}.`);
+  }
+  await chargerMembres();
+  render();
+}
+
+async function changerStatutMembre(id, actif){
+  const m = (state.membres || []).find(x => String(x.id) === String(id));
+  if(!m) return;
+  const nom = m.nom || m.email;
+  if(!actif){
+    if(state.authUser && m.auth_id === state.authUser.id){ showToast("Tu ne peux pas te retirer toi-même."); return; }
+    if(m.role === "Administrateur" && nbAdminsActifs() <= 1){ showToast("Impossible: il doit rester au moins un administrateur actif."); return; }
+    if(!confirm(`Retirer ${nom} de l'équipe ?\n\nSon accès sera désactivé, mais ses rapports seront conservés.`)) return;
+  }else{
+    if(!confirm(`Réactiver l'accès de ${nom} ?`)) return;
+  }
+  const r = await sbUpdate("Utilisateurs", `id=eq.${id}`, { actif: actif });
+  if(r === null){
+    showToast("Action refusée: " + messageErreurDb());
+  }else if(!r[0]){
+    showToast("Action refusée: droits insuffisants.");
+  }else{
+    showToast(actif ? `${nom} a été réactivé.` : `${nom} a été retiré de l'équipe.`);
+  }
+  await chargerMembres();
+  render();
+}
+
 async function ouvrirGestionEntreprise(){
+  if(!estAdmin()){ showToast("Accès réservé aux administrateurs."); return; }
   state.modal = null;
   state.view = "gestionEntreprise";
   render(); // affiche tout de suite, la liste arrive ensuite
@@ -409,9 +542,13 @@ async function inviterMembre(){
       showToast("Échec de l'invitation: " + (data.error || `erreur ${res.status}`));
       return;
     }
-    showToast(`Invitation envoyée à ${email}`);
+    if(data.reactivated){
+      showToast(`${email} était déjà dans l'équipe: son accès a été réactivé.`);
+    }else{
+      showToast(`Invitation envoyée à ${email}`);
+    }
     emailEl.value = "";
-    await chargerInvitations();
+    await Promise.all([chargerInvitations(), chargerMembres()]);
     render();
   }catch(e){
     showToast("Erreur réseau lors de l'invitation: " + (e.message||e));
@@ -533,8 +670,8 @@ async function commencerCreationCompte(nom, courriel, mdp){
     showToast("Attention: profil utilisateur non enregistré dans Supabase (" + lastDbError + "). L'onboarding va continuer mais certaines actions échoueront.");
   }
   state.user = profil
-    ? { nom: profil.nom, courriel: profil.email, id: profil.id, entreprise_id: profil.entreprise_id }
-    : { nom, courriel, entreprise_id: null };
+    ? { nom: profil.nom, courriel: profil.email, id: profil.id, entreprise_id: profil.entreprise_id, role: profil.role || "Administrateur" }
+    : { nom, courriel, entreprise_id: null, role: "Administrateur" };
   go("onboardingEtape1");
 }
 
@@ -546,7 +683,7 @@ async function terminerOnboarding(){
     email_facturation: state.onboardingForm.email,
     contact_urgence: state.onboardingForm.contact_urgence,
     logo_url: null, // téléversé séparément (Storage) — non branché dans ce prototype
-    approbation_requise: state.approbationActive
+    approbation_requise: false
   };
   const inserted = await sbInsert("Entreprises", row);
   const entreprise = inserted && inserted[0];
@@ -570,7 +707,8 @@ async function terminerOnboarding(){
   go("mesProjets");
 }
 
-function enregistrerEntreprise(){
+async function enregistrerEntreprise(){
+  if(!estAdmin()){ showToast("Accès réservé aux administrateurs."); return; }
   const updated = {
     nom_entreprise: document.getElementById("ge-nom").value,
     numero_rbq: document.getElementById("ge-rbq").value,
@@ -578,11 +716,27 @@ function enregistrerEntreprise(){
     email_facturation: document.getElementById("ge-email").value,
     contact_urgence: document.getElementById("ge-urgence").value
   };
-  state.entreprise = { ...state.entreprise, ...updated };
-  if(state.entreprise.id){
-    sbUpdate("Entreprises", `id=eq.${state.entreprise.id}`, updated);
+  if(!state.entreprise || !state.entreprise.id){ showToast("Erreur: entreprise introuvable."); return; }
+  const r = await sbUpdate("Entreprises", `id=eq.${state.entreprise.id}`, updated);
+  if(!r || !r[0]){
+    showToast("⚠ Échec de l'enregistrement dans Supabase : " + (r === null ? messageErreurDb() : "droits insuffisants") + ".");
+    return;
   }
+  state.entreprise = { ...state.entreprise, ...updated };
   showToast("Informations de l'entreprise mises à jour.");
+  render();
+}
+
+async function basculerApprobation(valeur){
+  if(!estAdmin()){ showToast("Accès réservé aux administrateurs."); render(); return; }
+  const r = await sbUpdate("Entreprises", `id=eq.${state.entreprise.id}`, { approbation_requise: !!valeur });
+  if(!r || !r[0]){
+    showToast("⚠ Réglage non enregistré : " + (r === null ? messageErreurDb() : "droits insuffisants") + ".");
+    render();
+    return;
+  }
+  state.entreprise.approbation_requise = !!valeur;
+  showToast(valeur ? "Approbation activée: les rapports des employés devront être approuvés." : "Approbation désactivée.");
   render();
 }
 
@@ -617,151 +771,719 @@ async function creerProjet(nom, adresse, typeProjetId, description){
 }
 
 function ouvrirProjet(id){ state.currentProjetId = id; go("detailProjet"); }
-function resetRapportForm(){ state.rapportForm = { titre:"", description:"", observations:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] }; }
+function resetRapportForm(){ state.rapportEnEdition = null; state.currentRapportId = null; state.rapportForm = { titre:"", description:"", observations:"", actions:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] }; state.photoSections = []; state.photosChargees = []; state.erreurPhotos = null; }
+
+async function compresserImage(file, maxDim = 1600, qualite = 0.82){
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((resolve, reject)=>{
+      const im = new Image();
+      im.onload = ()=>resolve(im);
+      im.onerror = ()=>reject(new Error("image illisible"));
+      im.src = url;
+    });
+    const ratio = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * ratio));
+    const h = Math.max(1, Math.round(img.naturalHeight * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", qualite);
+    return { base64: dataUrl.split(",")[1], mediaType: "image/jpeg", previewUrl: dataUrl };
+  }finally{
+    URL.revokeObjectURL(url);
+  }
+}
 
 async function ajouterPhotos(fileList){
-  for(const file of fileList){
-    const base64 = await fileToBase64(file);
-    state.rapportForm.photos.push({ base64, mediaType:file.type, previewUrl: URL.createObjectURL(file) });
+  const files = Array.from(fileList || []);
+  let ignorees = 0, illisibles = 0;
+  for(const file of files){
+    if(state.rapportForm.photos.length >= MAX_PHOTOS_RAPPORT){ ignorees++; continue; }
+    try{
+      state.rapportForm.photos.push(await compresserImage(file));
+    }catch(e){
+      illisibles++;
+    }
+  }
+  const msgs = [];
+  if(ignorees) msgs.push(`Maximum ${MAX_PHOTOS_RAPPORT} photos par rapport: ${ignorees} photo(s) ignorée(s).`);
+  if(illisibles) msgs.push(`${illisibles} photo(s) illisible(s) ignorée(s).`);
+  if(msgs.length) showToast(msgs.join(" "));
+  render();
+}
+
+function retirerPhoto(i){
+  state.rapportForm.photos.splice(i, 1);
+  const n = i + 1;
+  state.photoSections = (state.photoSections || []).filter(x => x.photo !== n).map(x => x.photo > n ? { ...x, photo: x.photo - 1 } : x);
+  if(state.contenuGenere){
+    const map = {};
+    for(let k = n + 1; k <= state.rapportForm.photos.length + 1; k++) map[k] = k - 1;
+    state.contenuGenere = renumeroterReferences(state.contenuGenere, map);
   }
   render();
 }
 
 async function genererRapport(){
-  go("generationIA");
+  state.enGeneration = true;
+  state.erreurGeneration = null;
   state.contenuGenere = "";
   state.photoSections = [];
-  render();
-  const { texte, photoSections } = await genererRapportIA(state.rapportForm);
-  state.contenuGenere = texte;
-  state.photoSections = photoSections || [];
+  state.contenuModifie = false;
+  go("generationIA");
+  const res = await genererRapportIA(state.rapportForm);
+  state.enGeneration = false;
+  if(res.erreur){
+    state.erreurGeneration = res.erreur;
+    state.contenuGenere = "";
+    state.photoSections = [];
+  }else{
+    state.contenuGenere = res.texte;
+    state.photoSections = res.photoSections || [];
+    reordonnerPhotos();
+  }
   render();
 }
 
-async function approuverRapport(){
+function regenererAvecConfirmation(){
+  if(state.contenuModifie && !confirm("Tes corrections manuelles seront perdues. Régénérer quand même ?")) return;
+  genererRapport();
+}
+
+function majSection(i, valeur){
+  const parsed = parseSections(state.contenuGenere);
+  parsed.sections[SECTIONS_RAPPORT[i]] = valeur;
+  state.contenuGenere = assemblerSections(parsed.sections);
+  state.contenuModifie = true;
+}
+function majBrut(valeur){ state.contenuGenere = valeur; state.contenuModifie = true; }
+function majLegende(i, valeur){
+  if(state.photoSections[i]) state.photoSections[i].legende = valeur;
+  state.contenuModifie = true;
+}
+
+/* ================= WORKFLOW D'APPROBATION ================= */
+function approbationRequise(){ return !!(state.entreprise && state.entreprise.approbation_requise); }
+function peutApprouver(){ return estAdmin() || !!(state.user && state.user.role === "Gestionnaire"); }
+function statutCibleValidation(){ return (approbationRequise() && !peutApprouver()) ? "À approuver" : "Approuvé"; }
+function libelleValidation(){ return statutCibleValidation() === "À approuver" ? "Soumettre pour approbation" : "Approuver et continuer"; }
+function classeStatutRapport(st){
+  if(st === "Approuvé") return "Actif";
+  if(st === "À approuver") return "AApprouver";
+  if(st === "Brouillon") return "Brouillon";
+  return "Suspendu";
+}
+function formatDateRapport(d){
+  if(!d) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d));
+  const dt = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(d);
+  return dt.toLocaleDateString('fr-CA');
+}
+function rapportCourant(){ return state.rapports.find(x=>String(x.id)===String(state.currentRapportId)) || null; }
+function rapportEnEditionObj(){ return state.rapportEnEdition ? (state.rapports.find(x=>String(x.id)===String(state.rapportEnEdition)) || null) : null; }
+function nomMembre(id){
+  const m = (state.membres||[]).find(x=>String(x.id)===String(id));
+  if(m) return m.nom || m.email;
+  if(state.user && id != null && String(state.user.id) === String(id)) return state.user.nom || state.user.courriel || "Auteur inconnu";
+  return "Auteur inconnu";
+}
+function erreurDbOuDroits(r){ return r === null ? messageErreurDb() : "droits insuffisants"; }
+
+async function sbDelete(table, matchQuery){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${matchQuery}`, {
+      method:"DELETE",
+      headers:{ ...authHeaders(), Prefer:"return=representation" }
+    });
+    if(!res.ok){ lastDbError = `DELETE ${table}: ${res.status} — ${await res.text()}`; throw new Error(lastDbError); }
+    return await res.json();
+  }catch(e){ lastDbError = e.message || String(e); console.warn(lastDbError); return null; }
+}
+
+/* ================= PHOTOS: ORDRE, RENUMÉROTATION ================= */
+function renumeroterReferences(texte, map){
+  return (texte || "").replace(/\b(photos?)(\s+)(\d+(?:(?:\s*,\s*|\s+et\s+)\d+)*)/gi,
+    (m, mot, esp, nums) => mot + esp + nums.replace(/\d+/g, n => map[Number(n)] !== undefined ? String(map[Number(n)]) : n));
+}
+
+function normaliserPhotoSections(){
+  const nb = (state.rapportForm.photos || []).length;
+  const vus = new Set();
+  const liste = [];
+  (state.photoSections || []).forEach(x => {
+    if(!x || !Number.isInteger(x.photo) || x.photo < 1 || x.photo > nb || vus.has(x.photo)) return;
+    vus.add(x.photo);
+    liste.push({ photo: x.photo, section: SECTIONS_PHOTO.includes(x.section) ? x.section : "", legende: x.legende || "", certitude: x.certitude || "" });
+  });
+  for(let n = 1; n <= nb; n++){
+    if(!vus.has(n)) liste.push({ photo: n, section: "", legende: "", certitude: "" });
+  }
+  state.photoSections = liste.sort((a, b) => a.photo - b.photo);
+}
+
+function referencesPhotos(texte){
+  const nums = [];
+  (texte || "").replace(/\b(photos?)(\s+)(\d+(?:(?:\s*,\s*|\s+et\s+)\d+)*)/gi, (m, a, b, c) => { (c.match(/\d+/g) || []).forEach(n => nums.push(Number(n))); return m; });
+  return nums;
+}
+
+// Mise en page commune à l'aperçu et au PDF: titres, paragraphes, et photos sous le paragraphe qui les cite.
+// Une photo est placée sous le paragraphe qui la cite si ce paragraphe est dans sa section; sinon à la fin de sa section; sans section: en annexe.
+function construireMiseEnPage(){
+  const photos = state.rapportForm.photos || [];
+  const ps = state.photoSections || [];
+  const info = n => ps.find(x => x.photo === n) || {};
+  const item = n => ({ n, photo: photos[n - 1], legende: (info(n).legende || "").trim(), certitude: info(n).certitude || "" });
+  const placees = new Set();
+  const blocs = [];
+  const prendre = (sec, nums) => {
+    const out = [];
+    nums.forEach(n => { if(!placees.has(n) && photos[n - 1] && info(n).section === sec){ placees.add(n); out.push(item(n)); } });
+    return out;
+  };
+  const parsed = parseSections(state.contenuGenere || "");
+  if(parsed.trouve){
+    SECTIONS_RAPPORT.forEach(sec => {
+      const texte = (parsed.sections[sec] || "").trim();
+      const siens = photos.map((_, i) => i + 1).filter(n => info(n).section === sec);
+      if(!texte && !siens.length) return;
+      blocs.push({ type: "titre", texte: sec });
+      if(texte) texte.split(/\n\s*\n/).forEach(par => {
+        if(!par.trim()) return;
+        blocs.push({ type: "texte", texte: par.trim() });
+        const it = prendre(sec, referencesPhotos(par));
+        if(it.length) blocs.push({ type: "photos", items: it });
+      });
+      const reste = prendre(sec, siens);
+      if(reste.length) blocs.push({ type: "photos", items: reste });
+    });
+  }else if((state.contenuGenere || "").trim()){
+    blocs.push({ type: "texte", texte: state.contenuGenere.trim() });
+  }
+  const annexe = photos.map((_, i) => i + 1).filter(n => !placees.has(n)).map(item);
+  if(annexe.length){
+    blocs.push({ type: "titre", texte: "Annexe photographique" });
+    blocs.push({ type: "photos", items: annexe });
+  }
+  return blocs;
+}
+
+// Renumérote les photos dans l'ordre où elles apparaissent dans le rapport
+function reordonnerPhotos(){
+  normaliserPhotoSections();
+  const photos = state.rapportForm.photos;
+  const ordre = [];
+  construireMiseEnPage().forEach(b => { if(b.type === "photos") b.items.forEach(it => ordre.push(it.n - 1)); });
+  if(ordre.length !== photos.length || ordre.every((v, k) => v === k)) return;
+  const map = {};
+  ordre.forEach((ancien, k) => { map[ancien + 1] = k + 1; });
+  state.rapportForm.photos = ordre.map(i => photos[i]);
+  state.photoSections = state.photoSections.map(x => ({ ...x, photo: map[x.photo] })).sort((a, b) => a.photo - b.photo);
+  state.contenuGenere = renumeroterReferences(state.contenuGenere, map);
+}
+
+function majSectionPhoto(i, valeur){
+  if(!state.photoSections[i]) return;
+  state.photoSections[i].section = valeur;
+  reordonnerPhotos();
+  state.contenuModifie = true;
+  render();
+}
+
+/* ================= PHOTOS: STOCKAGE SUPABASE ================= */
+const BUCKET_PHOTOS = "rapport-photos";
+function idUnique(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+function base64VersBlob(b64, type){
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: type || "image/jpeg" });
+}
+function blobVersBase64(blob){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1]);
+    r.onerror = () => reject(new Error("lecture de l'image impossible"));
+    r.readAsDataURL(blob);
+  });
+}
+async function stockageEnvoyer(chemin, photo){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET_PHOTOS}/${chemin}`, {
+      method: "POST",
+      headers: { ...authHeaders(), "Content-Type": "image/jpeg", "x-upsert": "false" },
+      body: base64VersBlob(photo.base64, photo.mediaType)
+    });
+    if(!res.ok){ lastDbError = `STORAGE envoi: ${res.status} — ${await res.text()}`; return false; }
+    return true;
+  }catch(e){ lastDbError = "STORAGE envoi: " + (e.message || e); return false; }
+}
+async function stockageSupprimer(chemins){
+  const liste = (chemins || []).filter(Boolean);
+  let ok = true;
+  for(let i = 0; i < liste.length; i += 100){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET_PHOTOS}`, {
+        method: "DELETE",
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ prefixes: liste.slice(i, i + 100) })
+      });
+      if(!res.ok){ lastDbError = `STORAGE suppression: ${res.status} — ${await res.text()}`; console.warn(lastDbError); ok = false; }
+    }catch(e){ lastDbError = "STORAGE suppression: " + (e.message || e); console.warn(lastDbError); ok = false; }
+  }
+  return ok;
+}
+async function stockageTelecharger(chemin){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/${BUCKET_PHOTOS}/${chemin}`, { headers: authHeaders() });
+    if(!res.ok){ lastDbError = `STORAGE lecture: ${res.status} — ${await res.text()}`; return null; }
+    return await res.blob();
+  }catch(e){ lastDbError = "STORAGE lecture: " + (e.message || e); return null; }
+}
+
+async function chargerPhotosRapport(rapportId){
+  const lignes = await sbSelect("Rapport_photos", `select=*&rapport_id=eq.${encodeURIComponent(rapportId)}&order=ordre.asc,id.asc`);
+  if(lignes === null) return { ok: false, erreur: messageErreurDb() };
+  const photos = await Promise.all(lignes.map(async l => {
+    const blob = await stockageTelecharger(l.chemin);
+    if(!blob) return null;
+    try{
+      const b64 = await blobVersBase64(blob);
+      return { base64: b64, mediaType: "image/jpeg", previewUrl: "data:image/jpeg;base64," + b64, chemin: l.chemin, dbId: l.id };
+    }catch(e){ lastDbError = e.message || String(e); return null; }
+  }));
+  const manque = photos.findIndex(p => !p);
+  if(manque !== -1) return { ok: false, erreur: `photo ${manque + 1} introuvable (${messageErreurDb()})` };
+  return {
+    ok: true,
+    photos,
+    lignes: lignes.map(l => ({ dbId: l.id, chemin: l.chemin })),
+    photoSections: lignes.map((l, i) => ({ photo: i + 1, section: l.section || "", legende: l.legende || "", certitude: l.certitude || "" }))
+  };
+}
+
+function metaPhoto(i){
+  const e = (state.photoSections || []).find(x => x.photo === i + 1);
+  return {
+    ordre: i + 1,
+    section: e && SECTIONS_PHOTO.includes(e.section) ? e.section : null,
+    legende: e ? (e.legende || "") : "",
+    certitude: e && e.certitude ? e.certitude : null
+  };
+}
+
+// Aligne les photos enregistrées sur celles du formulaire. Chaque photo est marquée dès qu'elle est enregistrée.
+async function synchroniserPhotos(rapportId){
+  const photos = state.rapportForm.photos || [];
+  const entId = state.user && state.user.entreprise_id;
+  const gardes = new Set(photos.filter(p => p.dbId).map(p => String(p.dbId)));
+  const aRetirer = (state.photosChargees || []).filter(x => !gardes.has(String(x.dbId)));
+
+  if(aRetirer.length){
+    const d = await sbDelete("Rapport_photos", `id=in.(${aRetirer.map(x => x.dbId).join(",")})`);
+    if(!d || d.length !== aRetirer.length) return { ok: false, erreur: "suppression d'une photo refusée (" + erreurDbOuDroits(d) + ")" };
+    state.photosChargees = state.photosChargees.filter(x => gardes.has(String(x.dbId)));
+    await stockageSupprimer(aRetirer.map(x => x.chemin));
+  }
+
+  for(let i = 0; i < photos.length; i++){
+    const p = photos[i];
+    const meta = metaPhoto(i);
+    const signature = JSON.stringify(meta);
+    if(p.dbId){
+      if(p.signature === signature) continue;
+      const u = await sbUpdate("Rapport_photos", `id=eq.${p.dbId}`, meta);
+      if(!u || !u[0]) return { ok: false, erreur: "modification d'une photo refusée (" + erreurDbOuDroits(u) + ")" };
+      p.signature = signature;
+      continue;
+    }
+    const chemin = `${entId}/${rapportId}/${idUnique()}.jpg`;
+    if(!(await stockageEnvoyer(chemin, p))) return { ok: false, erreur: `envoi de la photo ${i + 1} impossible (${messageErreurDb()})` };
+    const ins = await sbInsert("Rapport_photos", { rapport_id: rapportId, entreprise_id: entId, chemin, ...meta });
+    if(!ins || !ins[0]){
+      const detail = erreurDbOuDroits(ins);
+      await stockageSupprimer([chemin]);
+      return { ok: false, erreur: `enregistrement de la photo ${i + 1} impossible (${detail})` };
+    }
+    p.chemin = chemin; p.dbId = ins[0].id; p.signature = signature;
+    state.photosChargees.push({ dbId: ins[0].id, chemin });
+  }
+  return { ok: true };
+}
+
+// Après un échec sur un NOUVEAU rapport: tout retirer pour ne laisser aucun reste.
+async function annulerNouveauRapport(rapportId, entreeId){
+  const chemins = (state.rapportForm.photos || []).filter(p => p.chemin).map(p => p.chemin);
+  await stockageSupprimer(chemins);
+  await sbDelete("Rapports", `id=eq.${encodeURIComponent(rapportId)}`);
+  if(entreeId) await sbDelete("Entrees_terrain", `id=eq.${entreeId}`);
+  (state.rapportForm.photos || []).forEach(p => { delete p.chemin; delete p.dbId; delete p.signature; });
+  state.photosChargees = [];
+}
+
+function htmlPhotosBloc(items){
+  const cartes = items.map(it => `<figure style="margin:0;"><img src="${it.photo.previewUrl}" style="width:100%;border-radius:6px;display:block;"><figcaption style="font-size:11.5px;color:var(--grey);margin-top:3px;">Photo ${it.n}${it.legende ? " : " + escapeHtml(it.legende) : ""}${it.certitude === "incertaine" ? " (à confirmer)" : ""}</figcaption></figure>`).join("");
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">${cartes}</div>`;
+}
+function htmlRapportComplet(){
+  return construireMiseEnPage().map(b => {
+    if(b.type === "titre") return `<div style="font-weight:700;color:var(--green);margin-top:14px;">${escapeHtml(b.texte)}</div>`;
+    if(b.type === "texte") return `<div style="white-space:pre-wrap;margin:4px 0;">${escapeHtml(b.texte)}</div>`;
+    return htmlPhotosBloc(b.items);
+  }).join("");
+}
+function htmlErreurPhotos(){
+  return state.erreurPhotos ? `<div class="card" style="border-left:4px solid var(--refuse);font-size:13px;">⚠ Les photos de ce rapport n'ont pas pu être chargées (${escapeHtml(state.erreurPhotos)}). Reviens à la liste et rouvre le rapport pour réessayer.</div>` : "";
+}
+
+async function rafraichirRapports(){
+  if(!state.user || !state.user.entreprise_id) return;
+  const rows = await sbSelect("Rapports", `select=*&entreprise_id=eq.${state.user.entreprise_id}`);
+  if(rows) state.rapports = rows;
+}
+
+async function ouvrirListeRapports(){
+  await rafraichirRapports();
+  go("listeRapports");
+}
+
+async function ouvrirRapportsAApprouver(){
+  await Promise.all([rafraichirRapports(), chargerMembres()]);
+  go("rapportsAApprouver");
+}
+
+async function ouvrirRapport(id){
+  if(state.ouvertureEnCours) return;
+  const r = state.rapports.find(x=>String(x.id)===String(id));
+  if(!r) return;
+  state.ouvertureEnCours = true;
+  showToast("Ouverture du rapport...");
+  try{
+    const [ph] = await Promise.all([
+      chargerPhotosRapport(r.id),
+      (state.membres || []).length ? null : chargerMembres()
+    ]);
+    const estAuteur = !!(state.user && String(r.utilisateur_id) === String(state.user.id));
+    const statut = r.statut_rapport || "";
+    const editable = statut === "Brouillon" && (estAuteur || estAdmin());
+    if(editable && !ph.ok){
+      showToast("⚠ Impossible de charger les photos de ce brouillon (" + ph.erreur + "). Il n'a pas été ouvert pour éviter de perdre des photos. Réessaie.");
+      return;
+    }
+    state.currentRapportId = id;
+    state.currentProjetId = r.projet_id;
+    state.contenuGenere = r.contenu_ia || "";
+    state.rapportForm = { titre:r.titre||"", description:r.description||"", observations:r.observations||"", actions:r.actions_prevoir||"", visiteurs:r.visiteurs||"", epi:r.epi||"", meteo:r.meteo||"", nb_travailleurs:r.nb_travailleurs||"", photos: ph.ok ? ph.photos : [] };
+    state.photoSections = ph.ok ? ph.photoSections : [];
+    state.photosChargees = ph.ok ? ph.lignes : [];
+    state.erreurPhotos = ph.ok ? null : ph.erreur;
+    state.rapportEnEdition = null;
+    state.enGeneration = false; state.erreurGeneration = null; state.contenuModifie = false;
+    if(editable){
+      state.rapportEnEdition = r.id;
+      go("generationIA");
+      return;
+    }
+    if(statut === "À approuver" && peutApprouver()){ go("revueRapport"); return; }
+    go("pdfPreview");
+  }finally{
+    state.ouvertureEnCours = false;
+  }
+}
+
+async function enregistrerRapport(cible){
+  if(state.enregistrementEnCours) return;
+  state.enregistrementEnCours = true;
+  showToast("Enregistrement en cours...");
+  try{ await enregistrerRapportInterne(cible); }
+  finally{ state.enregistrementEnCours = false; }
+}
+
+async function enregistrerRapportInterne(cible){
   if(typeof state.currentProjetId === "string" && state.currentProjetId.startsWith("local-")){
     showToast("Ce projet n'a pas été enregistré dans Supabase (créé en mode secours). Le rapport ne peut pas être lié à un vrai projet. Recrée le projet une fois la connexion rétablie.");
     return;
   }
-  // 1. Créer d'abord la saisie terrain brute (Entrees_terrain)
-  const entreeRow = {
-    date_entree: new Date().toISOString().slice(0,10),
-    meteo: state.rapportForm.meteo,
-    temperature: null,
-    non_conformites: state.rapportForm.observations,
-    sst: state.rapportForm.epi,
-    notes: state.rapportForm.description,
-    photo_url: null, // Storage non branché dans ce prototype
-    projet_id: state.currentProjetId,
-    utilisateur_id: state.user?.id || null
-  };
-  const entreeInserted = await sbInsert("Entrees_terrain", entreeRow);
-  if(!entreeInserted || !entreeInserted[0]){
-    showToast("⚠ Échec de l'enregistrement dans Supabase : " + lastDbError + " — le rapport n'a pas été approuvé.");
+  const proj = projetCourant();
+  if(proj && !projetActif(proj)){
+    showToast("Ce projet n'est plus actif: impossible d'enregistrer ce rapport.");
     return;
   }
-  const entreeId = entreeInserted[0].id;
+  if(cible === "Approuvé" && approbationRequise() && !peutApprouver()){
+    showToast("L'approbation est exigée: soumets ce rapport pour approbation.");
+    return;
+  }
+  const f = state.rapportForm;
+  normaliserPhotoSections();
+  const champsContenu = {
+    titre: f.titre,
+    description: f.description,
+    observations: f.observations,
+    actions_prevoir: f.actions || "",
+    meteo: f.meteo,
+    nb_travailleurs: f.nb_travailleurs ? parseInt(f.nb_travailleurs) : null,
+    visiteurs: f.visiteurs,
+    epi: f.epi,
+    contenu_ia: state.contenuGenere
+  };
+  const echec = (detail)=> showToast("⚠ Échec de l'enregistrement dans Supabase : " + detail + " — le rapport n'a pas été enregistré.");
+  const echecStatut = (detail)=> showToast("⚠ Le contenu et les photos sont enregistrés en brouillon, mais le changement de statut a échoué : " + detail + ".");
+  const changerStatut = async (id)=>{
+    const maintenant = new Date().toISOString();
+    return await sbUpdate("Rapports", `id=eq.${encodeURIComponent(id)}`, {
+      statut_rapport: cible,
+      approuve_par: cible === "Approuvé" ? (state.user?.id || null) : null,
+      approuve_le: cible === "Approuvé" ? maintenant : null
+    });
+  };
+  const existant = rapportEnEditionObj();
+  let rapport = null;
 
-  // 2. Créer le rapport, qui référence cette entrée terrain
-  const row = {
-    entree_terrain_id: entreeId,
-    projet_id: state.currentProjetId,
-    entreprise_id: state.user?.entreprise_id || null,
-    utilisateur_id: state.user?.id || null,
-    titre: state.rapportForm.titre,
-    description: state.rapportForm.description,
-    observations: state.rapportForm.observations,
-    meteo: state.rapportForm.meteo,
-    nb_travailleurs: state.rapportForm.nb_travailleurs ? parseInt(state.rapportForm.nb_travailleurs) : null,
-    visiteurs: state.rapportForm.visiteurs,
-    epi: state.rapportForm.epi,
-    statut_rapport: "Approuvé",
-    contenu_ia: state.contenuGenere,
-    date_rapport: new Date().toISOString().slice(0,10)
-  };
-  const inserted = await sbInsert("Rapports", row);
-  if(!inserted || !inserted[0]){
-    showToast("⚠ Échec de l'enregistrement dans Supabase : " + lastDbError + " — le rapport n'a pas été approuvé.");
-    return;
+  if(existant){
+    if(existant.entree_terrain_id){
+      const e = await sbUpdate("Entrees_terrain", `id=eq.${existant.entree_terrain_id}`, {
+        meteo: f.meteo, non_conformites: f.observations, sst: f.epi, notes: f.description
+      });
+      if(!e || !e[0]){ echec(erreurDbOuDroits(e)); return; }
+    }
+    const u = await sbUpdate("Rapports", `id=eq.${encodeURIComponent(existant.id)}`, champsContenu);
+    if(!u || !u[0]){ echec(erreurDbOuDroits(u)); return; }
+    rapport = u[0];
+    state.rapports = state.rapports.map(x => String(x.id) === String(rapport.id) ? rapport : x);
+    const sp = await synchroniserPhotos(rapport.id);
+    if(!sp.ok){ echec("photos : " + sp.erreur); return; }
+    if(cible !== "Brouillon"){
+      const c = await changerStatut(rapport.id);
+      if(!c || !c[0]){ echecStatut(erreurDbOuDroits(c)); return; }
+      rapport = c[0];
+      state.rapports = state.rapports.map(x => String(x.id) === String(rapport.id) ? rapport : x);
+    }
+  }else{
+    const entreeInserted = await sbInsert("Entrees_terrain", {
+      date_entree: new Date().toISOString().slice(0,10),
+      meteo: f.meteo,
+      temperature: null,
+      non_conformites: f.observations,
+      sst: f.epi,
+      notes: f.description,
+      photo_url: null,
+      projet_id: state.currentProjetId,
+      utilisateur_id: state.user?.id || null
+    });
+    if(!entreeInserted || !entreeInserted[0]){ echec(lastDbError); return; }
+    const entreeId = entreeInserted[0].id;
+    // Toujours créé en brouillon: le statut final est appliqué une fois les photos enregistrées
+    const inserted = await sbInsert("Rapports", {
+      ...champsContenu,
+      statut_rapport: "Brouillon",
+      approuve_par: null,
+      approuve_le: null,
+      entree_terrain_id: entreeId,
+      projet_id: state.currentProjetId,
+      entreprise_id: state.user?.entreprise_id || null,
+      utilisateur_id: state.user?.id || null,
+      date_rapport: new Date().toISOString().slice(0,10)
+    });
+    if(!inserted || !inserted[0]){
+      const detail = lastDbError;
+      await sbDelete("Entrees_terrain", `id=eq.${entreeId}`);
+      echec(detail);
+      return;
+    }
+    rapport = inserted[0];
+    state.photosChargees = [];
+    const sp = await synchroniserPhotos(rapport.id);
+    if(!sp.ok){
+      await annulerNouveauRapport(rapport.id, entreeId);
+      echec("photos : " + sp.erreur);
+      return;
+    }
+    state.rapports.push(rapport);
+    if(cible !== "Brouillon"){
+      const c = await changerStatut(rapport.id);
+      if(!c || !c[0]){
+        const detail = erreurDbOuDroits(c);
+        state.rapportEnEdition = rapport.id;
+        state.currentRapportId = rapport.id;
+        echecStatut(detail);
+        return;
+      }
+      rapport = c[0];
+      state.rapports = state.rapports.map(x => String(x.id) === String(rapport.id) ? rapport : x);
+    }
   }
-  const finalRow = inserted[0];
-  state.currentRapportId = finalRow.id;
-  state.rapports.push(finalRow);
+
+  state.currentRapportId = rapport.id;
+  state.rapportEnEdition = null;
+  state.erreurPhotos = null;
   state.dbStatus = "ok";
-  go("pdfPreview");
+  if(cible === "Approuvé"){
+    go("pdfPreview");
+  }else if(cible === "À approuver"){
+    showToast("Rapport soumis pour approbation.");
+    go("listeRapports");
+  }else{
+    showToast("Brouillon enregistré.");
+    go("listeRapports");
+  }
+}
+
+async function approuverRevue(id){
+  const r = state.rapports.find(x=>String(x.id)===String(id));
+  if(!r) return;
+  if(!peutApprouver()){ showToast("Seul un gestionnaire ou un administrateur peut approuver."); return; }
+  if(!confirm(`Approuver le rapport « ${r.titre || "Sans titre"} » ?\n\nIl sera verrouillé et pourra être envoyé au client.`)) return;
+  const u = await sbUpdate("Rapports", `id=eq.${id}`, { statut_rapport:"Approuvé", approuve_par: state.user.id, approuve_le: new Date().toISOString() });
+  if(!u || !u[0]){ showToast("⚠ Approbation refusée: " + erreurDbOuDroits(u) + "."); return; }
+  state.rapports = state.rapports.map(x => String(x.id) === String(id) ? u[0] : x);
+  showToast("Rapport approuvé.");
+  go("rapportsAApprouver");
+}
+
+async function renvoyerRevue(id){
+  const r = state.rapports.find(x=>String(x.id)===String(id));
+  if(!r) return;
+  if(!peutApprouver()){ showToast("Seul un gestionnaire ou un administrateur peut renvoyer un rapport."); return; }
+  const motif = prompt("Motif du renvoi (obligatoire). L'auteur le verra et pourra corriger son rapport:");
+  if(motif === null) return;
+  if(!motif.trim()){ showToast("Le motif du renvoi est obligatoire."); return; }
+  const u = await sbUpdate("Rapports", `id=eq.${id}`, { statut_rapport:"Brouillon", commentaire_revision: motif.trim(), approuve_par:null, approuve_le:null });
+  if(!u || !u[0]){ showToast("⚠ Renvoi refusé: " + erreurDbOuDroits(u) + "."); return; }
+  state.rapports = state.rapports.map(x => String(x.id) === String(id) ? u[0] : x);
+  showToast("Rapport renvoyé à son auteur.");
+  go("rapportsAApprouver");
+}
+
+async function rouvrirRapport(id){
+  if(!estAdmin()){ showToast("Seul un administrateur peut rouvrir un rapport approuvé."); return; }
+  if(!confirm("Rouvrir ce rapport ?\n\nIl repassera en brouillon et devra être approuvé à nouveau avant l'envoi.")) return;
+  const u = await sbUpdate("Rapports", `id=eq.${id}`, { statut_rapport:"Brouillon", approuve_par:null, approuve_le:null });
+  if(!u || !u[0]){ showToast("⚠ Réouverture refusée: " + erreurDbOuDroits(u) + "."); return; }
+  state.rapports = state.rapports.map(x => String(x.id) === String(id) ? u[0] : x);
+  showToast("Rapport rouvert en brouillon.");
+  go("listeRapports");
+}
+
+async function supprimerBrouillon(id){
+  const r = state.rapports.find(x=>String(x.id)===String(id));
+  if(!r || r.statut_rapport !== "Brouillon"){ showToast("Seul un brouillon peut être supprimé."); return; }
+  if(!confirm("Supprimer ce brouillon ? Cette action est irréversible.")) return;
+  const lignesPhotos = await sbSelect("Rapport_photos", `select=chemin&rapport_id=eq.${encodeURIComponent(id)}`);
+  if(lignesPhotos === null){ showToast("⚠ Suppression annulée: lecture des photos impossible (" + messageErreurDb() + ")."); return; }
+  const d = await sbDelete("Rapports", `id=eq.${encodeURIComponent(id)}`);
+  if(!d || !d[0]){ showToast("⚠ Suppression refusée: " + erreurDbOuDroits(d) + "."); return; }
+  await stockageSupprimer(lignesPhotos.map(l => l.chemin));
+  if(r.entree_terrain_id) await sbDelete("Entrees_terrain", `id=eq.${r.entree_terrain_id}`);
+  state.rapports = state.rapports.filter(x => String(x.id) !== String(id));
+  state.rapportEnEdition = null;
+  showToast("Brouillon supprimé.");
+  go("listeRapports");
 }
 
 function genererPDF(){
+  if(state.erreurPhotos){
+    showToast("Les photos de ce rapport n'ont pas pu être chargées (" + state.erreurPhotos + "). Rouvre le rapport avant de télécharger le PDF.");
+    return;
+  }
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
   const form = state.rapportForm;
-  const SECTIONS = ["Résumé","Travaux effectués","Observations","Sécurité et EPI","Conditions et main-d'œuvre"];
+  const rap = rapportCourant();
+  const proj = projetCourant();
+  const MARGE = 15, LARGEUR = 180, BAS = 280;
+  const NOIR = [23,24,26], VERT = [67,160,71], GRIS = [100,100,100];
+  let y = 18;
+  const ensure = (h)=>{ if(y + h > BAS){ doc.addPage(); y = 18; } };
 
-  doc.setFont("helvetica","bold"); doc.setFontSize(14);
-  doc.text(form.titre || "Rapport de chantier", 15, 18);
-  doc.setDrawColor(23,24,26); doc.setLineWidth(0.5); doc.line(15,22,195,22);
-  doc.setFont("helvetica","normal"); doc.setFontSize(10);
-  doc.text(`Date: ${new Date().toLocaleDateString('fr-CA')}   Météo: ${form.meteo||"-"}   Travailleurs: ${form.nb_travailleurs||"-"}`, 15, 28);
+  // ----- En-tête -----
+  doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.setTextColor(...NOIR);
+  doc.splitTextToSize(form.titre || "Rapport de chantier", LARGEUR).forEach(l=>{ doc.text(l, MARGE, y); y += 7; });
+  doc.setDrawColor(...NOIR); doc.setLineWidth(0.5); doc.line(MARGE, y, MARGE + LARGEUR, y); y += 6;
 
-  // Découper le texte généré en sections, à partir des titres "## "
-  const raw = state.contenuGenere || "";
-  const sectionTexts = {};
-  const regex = /##\s*(Résumé|Travaux effectués|Observations|Sécurité et EPI|Conditions et main-d'œuvre)\s*\n([\s\S]*?)(?=##\s*(?:Résumé|Travaux effectués|Observations|Sécurité et EPI|Conditions et main-d'œuvre)|$)/g;
-  let match, foundAny = false;
-  while((match = regex.exec(raw)) !== null){
-    sectionTexts[match[1].trim()] = match[2].trim();
-    foundAny = true;
+  const datePdf = (rap && rap.date_rapport) ? formatDateRapport(rap.date_rapport) : new Date().toLocaleDateString("fr-CA");
+  const auteurId = rap ? rap.utilisateur_id : (state.user && state.user.id);
+  let statutTxt = rap ? (rap.statut_rapport || "Brouillon") : "Brouillon";
+  if(rap && rap.statut_rapport === "Approuvé"){
+    statutTxt = "Approuvé" + (rap.approuve_le ? " le " + new Date(rap.approuve_le).toLocaleDateString("fr-CA") : "") + (rap.approuve_par ? " par " + nomMembre(rap.approuve_par) : "");
   }
-  if(!foundAny){ sectionTexts["__brut__"] = raw; }
+  const infos = [
+    ["Projet", proj ? [proj.nom_projet, proj.adresse_projet].filter(Boolean).join(", ") : ""],
+    ["Entreprise", (state.entreprise && state.entreprise.nom_entreprise) || ""],
+    ["Date", datePdf],
+    ["Météo", form.meteo || "-"],
+    ["Travailleurs", String(form.nb_travailleurs || "-")],
+    ["Rédigé par", auteurId ? nomMembre(auteurId) : ""],
+    ["Statut", statutTxt]
+  ].filter(x => x[1]);
+  doc.setFontSize(10);
+  infos.forEach(([lab, val])=>{
+    const lignes = doc.splitTextToSize(String(val), LARGEUR - 33);
+    ensure(lignes.length * 5 + 1);
+    doc.setFont("helvetica","bold"); doc.setTextColor(...GRIS); doc.text(lab, MARGE, y);
+    doc.setFont("helvetica","normal"); doc.setTextColor(...NOIR);
+    lignes.forEach((l, k)=>{ doc.text(l, MARGE + 33, y + k * 5); });
+    y += lignes.length * 5 + 1;
+  });
+  y += 2; doc.setDrawColor(200); doc.setLineWidth(0.2); doc.line(MARGE, y, MARGE + LARGEUR, y); y += 7;
 
-  const photosBySection = {};
-  (state.photoSections||[]).forEach(ps=>{
-    const idx = ps.photo - 1;
-    if(form.photos[idx]){
-      if(!photosBySection[ps.section]) photosBySection[ps.section] = [];
-      photosBySection[ps.section].push(form.photos[idx]);
+  // ----- Photos et sections (mise en page commune) -----
+  function placerPhotos(items){
+    const CW = 87, GAP = 6, HMAX = 70;
+    for(let k = 0; k < items.length; k += 2){
+      const rangee = items.slice(k, k + 2).map(it=>{
+        const url = `data:${it.photo.mediaType || "image/jpeg"};base64,${it.photo.base64}`;
+        let w = CW, h = 52;
+        try{
+          const pr = doc.getImageProperties(url);
+          const ratio = pr.width / pr.height;
+          w = CW; h = w / ratio;
+          if(h > HMAX){ h = HMAX; w = h * ratio; }
+        }catch(e){}
+        doc.setFont("helvetica","italic"); doc.setFontSize(8);
+        const cap = `Photo ${it.n}${it.legende ? " : " + it.legende : ""}${it.certitude === "incertaine" ? " (à confirmer)" : ""}`;
+        return { url, w, h, lignes: doc.splitTextToSize(cap, CW).slice(0, 5) };
+      });
+      const hRangee = Math.max(...rangee.map(c => c.h + 1.5 + c.lignes.length * 3.6)) + 5;
+      ensure(hRangee);
+      rangee.forEach((c, j)=>{
+        const x = MARGE + j * (CW + GAP);
+        try{ doc.addImage(c.url, "JPEG", x, y, c.w, c.h, undefined, "FAST"); }catch(e){}
+        doc.setFont("helvetica","italic"); doc.setFontSize(8); doc.setTextColor(...GRIS);
+        c.lignes.forEach((l, m)=>{ doc.text(l, x, y + c.h + 4 + m * 3.6); });
+      });
+      doc.setTextColor(...NOIR);
+      y += hRangee;
+    }
+  }
+
+  construireMiseEnPage().forEach((b, idx, tous)=>{
+    if(b.type === "titre"){
+      ensure(34);
+      if(idx > 0) y += 2;
+      doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(...VERT);
+      doc.text(b.texte, MARGE, y); y += 6;
+    }else if(b.type === "texte"){
+      doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(...NOIR);
+      doc.splitTextToSize(b.texte, LARGEUR).forEach(l=>{ ensure(5.5); doc.text(l, MARGE, y); y += 5.2; });
+      y += 3;
+    }else{
+      placerPhotos(b.items);
+      y += 2;
     }
   });
-  const usedPhotoIdx = new Set((state.photoSections||[]).map(ps=>ps.photo-1));
 
-  let y = 38;
-  const pageBottom = 275;
-  function ensureSpace(needed){
-    if(y + needed > pageBottom){ doc.addPage(); y = 20; }
+  // ----- Pied de page sur toutes les pages -----
+  const nbPages = doc.getNumberOfPages();
+  for(let p = 1; p <= nbPages; p++){
+    doc.setPage(p);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(150);
+    doc.text(`Généré via ChantierAI - page ${p}/${nbPages}`, MARGE, 290);
   }
-  function addImageBlock(photo, caption){
-    ensureSpace(90);
-    doc.setFont("helvetica","italic"); doc.setFontSize(9); doc.setTextColor(100);
-    doc.text(caption, 15, y); y += 4;
-    try{ doc.addImage(`data:${photo.mediaType};base64,${photo.base64}`, undefined, 15, y, 120, 80, undefined, "FAST"); }catch(e){}
-    y += 86;
-    doc.setTextColor(23,24,26);
-  }
-
-  const sectionsToRender = foundAny ? SECTIONS : ["__brut__"];
-  sectionsToRender.forEach(sec=>{
-    const text = sectionTexts[sec];
-    if(text === undefined) return;
-    ensureSpace(16);
-    if(sec !== "__brut__"){
-      doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(67,160,71);
-      doc.text(sec, 15, y); y += 6;
-    }
-    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(23,24,26);
-    const lines = doc.splitTextToSize(text, 180);
-    lines.forEach(line=>{ ensureSpace(6); doc.text(line, 15, y); y += 6; });
-    y += 4;
-    (photosBySection[sec]||[]).forEach((photo, i)=> addImageBlock(photo, `Photo — ${sec}`));
-  });
-
-  // Photos non rattachées à une section précise (ou si l'IA n'a pas fourni de mapping)
-  form.photos.forEach((p, idx)=>{
-    if(!usedPhotoIdx.has(idx)) addImageBlock(p, `Photo ${idx+1} — annexe`);
-  });
-
-  doc.setFontSize(8); doc.setTextColor(150);
-  doc.text("Généré via ChantierAI (prototype)", 15, 292);
-  doc.save(`rapport-${(form.titre||"chantier").replace(/\s+/g,'-')}.pdf`);
+  doc.save(`rapport-${(form.titre || "chantier").replace(/[^\p{L}\p{N}]+/gu, "-")}.pdf`);
 }
 
 function ajouterDestinataire(){ state.destinataires.push(""); render(); }
@@ -769,21 +1491,75 @@ function retirerDestinataire(i){ state.destinataires.splice(i,1); render(); }
 function majDestinataire(i,val){ state.destinataires[i]=val; }
 function envoyerSimule(){ showToast("Envoi simulé — Resend n'est pas encore branché."); go("mesProjets"); }
 
-function ouvrirRapport(id){
-  const r = state.rapports.find(x=>String(x.id)===String(id));
-  if(!r) return;
-  state.currentRapportId = id;
-  state.currentProjetId = r.projet_id;
-  state.contenuGenere = r.contenu_ia || "";
-  state.rapportForm = { titre:r.titre||"", description:r.description||"", observations:r.observations||"", visiteurs:r.visiteurs||"", epi:r.epi||"", meteo:r.meteo||"", nb_travailleurs:r.nb_travailleurs||"", photos:[] };
-  go("pdfPreview");
+
+function projetCourant(){
+  return state.projets.find(p=>String(p.id)===String(state.currentProjetId)) || null;
+}
+function projetActif(p){ return !!p && (p.statut_projet||"Actif") === "Actif"; }
+function peutModifierStatutProjet(p){
+  if(!p) return false;
+  if(estAdmin()) return true;
+  return !!(state.user && state.user.role === "Gestionnaire") && p.statut_projet !== "Terminé";
 }
 
-function modifierStatutProjet(nouveauStatut){
-  const p = state.projets.find(p=>String(p.id)===String(state.currentProjetId));
-  if(p) p.statut_projet = nouveauStatut;
-  sbUpdate("Projets", `id=eq.${state.currentProjetId}`, { statut_projet: nouveauStatut });
-  state.modal = null; render();
+async function modifierStatutProjet(nouveauStatut){
+  const p = projetCourant();
+  state.modal = null;
+  if(!p){ render(); return; }
+  if(!peutModifierStatutProjet(p)){ showToast("Tu n'as pas le droit de modifier le statut de ce projet."); render(); return; }
+  if(nouveauStatut === "Terminé" && !estAdmin()){ showToast("Seul un administrateur peut terminer un projet."); render(); return; }
+  if(nouveauStatut === (p.statut_projet||"Actif")){ render(); return; }
+  if(nouveauStatut === "Terminé" && !confirm("Marquer ce projet comme terminé ?\n\nPlus aucun rapport ne pourra y être créé. Tu pourras ensuite le supprimer ou le rouvrir.")){ render(); return; }
+  const r = await sbUpdate("Projets", `id=eq.${p.id}`, { statut_projet: nouveauStatut });
+  if(r === null){
+    showToast("Changement de statut refusé: " + messageErreurDb());
+  }else if(!r[0]){
+    showToast("Changement de statut refusé: droits insuffisants.");
+  }else{
+    p.statut_projet = nouveauStatut;
+    showToast(`Statut du projet: ${nouveauStatut}.`);
+  }
+  render();
+}
+
+async function supprimerProjet(){
+  const p = projetCourant();
+  if(!p) return;
+  if(!estAdmin()){ showToast("Seul un administrateur peut supprimer un projet."); return; }
+  if(p.statut_projet !== "Terminé"){ showToast("Seul un projet terminé peut être supprimé."); return; }
+  const nbRapports = state.rapports.filter(r=>String(r.projet_id)===String(p.id)).length;
+  const saisie = prompt(`SUPPRESSION DÉFINITIVE\n\nLe projet « ${p.nom_projet} » sera supprimé avec ses ${nbRapports} rapport(s), ses saisies terrain et ses destinataires. Cette action est irréversible.\n\nPour confirmer, tape le nom exact du projet:`);
+  if(saisie === null) return;
+  if(saisie.trim() !== (p.nom_projet||"").trim()){ showToast("Le nom saisi ne correspond pas. Suppression annulée."); return; }
+  try{
+    const rapsProjet = await sbSelect("Rapports", `select=id&projet_id=eq.${encodeURIComponent(p.id)}`);
+    if(rapsProjet === null){ showToast("Suppression annulée: lecture des rapports impossible (" + messageErreurDb() + ")."); return; }
+    let cheminsPhotos = [];
+    if(rapsProjet.length){
+      const lp = await sbSelect("Rapport_photos", `select=chemin&rapport_id=in.(${rapsProjet.map(x => encodeURIComponent(x.id)).join(",")})`);
+      if(lp === null){ showToast("Suppression annulée: lecture des photos impossible (" + messageErreurDb() + ")."); return; }
+      cheminsPhotos = lp.map(l => l.chemin);
+    }
+    const idRpc = /^\d+$/.test(String(p.id)) ? Number(p.id) : p.id;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/supprimer_projet`, {
+      method:"POST",
+      headers:{ ...authHeaders(), "Content-Type":"application/json" },
+      body: JSON.stringify({ p_projet_id: idRpc })
+    });
+    if(!res.ok){
+      const err = await res.json().catch(()=>({}));
+      showToast("Suppression refusée: " + (err.message || `erreur ${res.status}`));
+      return;
+    }
+    await stockageSupprimer(cheminsPhotos);
+    state.projets = state.projets.filter(x=>String(x.id)!==String(p.id));
+    state.rapports = state.rapports.filter(r=>String(r.projet_id)!==String(p.id));
+    state.currentProjetId = null;
+    showToast("Projet supprimé.");
+    go("mesProjets");
+  }catch(e){
+    showToast("Erreur réseau lors de la suppression: " + (e.message||e));
+  }
 }
 
 /* ================= RENDU ================= */
@@ -798,15 +1574,17 @@ function render(){
   else if(state.view==="ajouterProjet") el.innerHTML = renderAjouterProjet();
   else if(state.view==="detailProjet") el.innerHTML = renderDetailProjet();
   else if(state.view==="listeRapports") el.innerHTML = renderListeRapports();
-  else if(state.view==="gestionEntreprise") el.innerHTML = renderGestionEntreprise();
+  else if(state.view==="gestionEntreprise") el.innerHTML = estAdmin() ? renderGestionEntreprise() : renderMonProfil();
+  else if(state.view==="monProfil") el.innerHTML = renderMonProfil();
   else if(state.view==="creerRapport") el.innerHTML = renderCreerRapport();
   else if(state.view==="generationIA") el.innerHTML = renderGenerationIA();
   else if(state.view==="approbationRapport") el.innerHTML = renderApprobationRapport();
+  else if(state.view==="revueRapport") el.innerHTML = renderRevueRapport();
+  else if(state.view==="rapportsAApprouver") el.innerHTML = renderRapportsAApprouver();
   else if(state.view==="pdfPreview") el.innerHTML = renderPdfPreview();
   else if(state.view==="envoiPDF") el.innerHTML = renderEnvoiPDF();
   else if(state.view==="onboardingEtape1") el.innerHTML = renderOnboarding1();
   else if(state.view==="onboardingEtape2") el.innerHTML = renderOnboarding2();
-  else if(state.view==="onboardingEtape3") el.innerHTML = renderOnboarding3();
   else if(state.view==="accepterInvitation") el.innerHTML = renderAccepterInvitation();
 
   app.appendChild(el);
@@ -817,7 +1595,7 @@ function render(){
     overlay.innerHTML = `<div class="sheet">
       <button class="btn btn-primary" onclick="modifierStatutProjet('Actif')">Actif</button>
       <button class="btn btn-warning" onclick="modifierStatutProjet('Suspendu')">Suspendu</button>
-      <button class="btn btn-danger" onclick="modifierStatutProjet('Refusé')">Refusé</button>
+      ${estAdmin() ? `<button class="btn btn-danger" onclick="modifierStatutProjet('Terminé')">Terminé</button>` : ``}
       <button class="btn btn-grey" onclick="state.modal=null;render()">Annuler</button>
     </div>`;
     overlay.onclick = (e)=>{ if(e.target===overlay){ state.modal=null; render(); } };
@@ -903,9 +1681,14 @@ function renderMesProjets(){
       <span class="status ${p.statut_projet||'Actif'}">${p.statut_projet||'Actif'}</span>
     </div>`).join("") || `<p class="muted center">Aucun projet encore. Crée ton premier projet pour commencer.</p>`;
   return `
-  ${header("Mes projets", null, "ouvrirGestionEntreprise()")}
+  ${header("Mes projets", null, "ouvrirMenuProfil()")}
   <main>
     ${dbBadge()}
+    ${(()=>{
+      if(!peutApprouver()) return "";
+      const n = state.rapports.filter(r=>r.statut_rapport==="À approuver").length;
+      return n ? `<div class="card" style="border-left:4px solid var(--suspendu);display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:13.5px;font-weight:600;">${n} rapport${n>1?"s":""} à approuver</div><button class="btn btn-warning" style="width:auto;margin:0;padding:8px 14px;" onclick="ouvrirRapportsAApprouver()">Voir</button></div>` : "";
+    })()}
     <div class="card">${items}</div>
     <button class="btn btn-primary" onclick="go('ajouterProjet')">+ Nouveau projet</button>
   </main>`;
@@ -938,9 +1721,12 @@ function renderDetailProjet(){
       <label>Adresse</label><div>${p.adresse_projet||"Adresse non disponible"}</div>
       <label>Statut</label><span class="status ${p.statut_projet||'Actif'}" style="margin-top:6px;">${p.statut_projet||'Actif'}</span>
     </div>
-    <button class="btn btn-primary" onclick="resetRapportForm();go('creerRapport')">Créer un rapport</button>
-    <button class="btn btn-warning" onclick="state.modal='modifierStatut';render()">Modifier le statut</button>
-    <button class="btn btn-outline" onclick="go('listeRapports')">Voir les rapports</button>
+    ${projetActif(p)
+      ? `<button class="btn btn-primary" onclick="resetRapportForm();go('creerRapport')">Créer un rapport</button>`
+      : `<p class="muted center">Projet ${escapeHtml(p.statut_projet||"")}: la création de rapports est désactivée.</p>`}
+    ${peutModifierStatutProjet(p) ? `<button class="btn btn-warning" onclick="state.modal='modifierStatut';render()">Modifier le statut</button>` : ``}
+    <button class="btn btn-outline" onclick="ouvrirListeRapports()">Voir les rapports</button>
+    ${(estAdmin() && p.statut_projet === "Terminé") ? `<button class="btn btn-danger" style="margin-top:16px;" onclick="supprimerProjet()">Supprimer le projet</button>` : ``}
   </main>`;
 }
 
@@ -948,13 +1734,49 @@ function renderListeRapports(){
   const list = state.rapports.filter(r=>String(r.projet_id)===String(state.currentProjetId));
   const items = list.map(r=>`
     <div class="list-item" style="cursor:pointer;" onclick="ouvrirRapport('${r.id}')">
-      <div class="t">${r.titre||"Sans titre"}</div>
-      <div class="d">${r.date_rapport ? new Date(r.date_rapport).toLocaleDateString('fr-CA') : "Date non disponible"}</div>
-      <span class="status ${r.statut_rapport==='Approuvé'?'Actif':'Suspendu'}">${r.statut_rapport||"Aucun statut"}</span>
+      <div class="t">${escapeHtml(r.titre||"Sans titre")}</div>
+      <div class="d">${r.date_rapport ? formatDateRapport(r.date_rapport) : "Date non disponible"}</div>
+      <span class="status ${classeStatutRapport(r.statut_rapport)}">${escapeHtml(r.statut_rapport||"Aucun statut")}</span>
+      ${(r.statut_rapport==="Brouillon" && r.commentaire_revision) ? `<div class="muted" style="font-size:11.5px;margin-top:4px;color:#7A5B00;">Renvoyé: ${escapeHtml(r.commentaire_revision)}</div>` : ""}
     </div>`).join("") || `<p class="muted center">Aucun rapport pour ce projet encore.</p>`;
   return `
   ${header("Rapports","go('detailProjet')")}
   <main>${items}</main>`;
+}
+
+function renderRapportsAApprouver(){
+  const list = state.rapports.filter(r=>r.statut_rapport==="À approuver");
+  const items = list.map(r=>{
+    const proj = state.projets.find(p=>String(p.id)===String(r.projet_id));
+    return `
+    <div class="list-item" style="cursor:pointer;" onclick="ouvrirRapport('${r.id}')">
+      <div class="t">${escapeHtml(r.titre||"Sans titre")}</div>
+      <div class="d">${escapeHtml(proj ? proj.nom_projet : "Projet")} · ${escapeHtml(nomMembre(r.utilisateur_id))} · ${r.date_rapport ? formatDateRapport(r.date_rapport) : ""}</div>
+      <span class="status AApprouver">À approuver</span>
+    </div>`;
+  }).join("") || `<p class="muted center">Aucun rapport en attente d'approbation.</p>`;
+  return `
+  ${header("Rapports à approuver","go('mesProjets')")}
+  <main>${items}</main>`;
+}
+
+function renderRevueRapport(){
+  const r = rapportCourant() || {};
+  const f = state.rapportForm;
+  return `
+  ${header("Revue du rapport","go('rapportsAApprouver')")}
+  <main>
+    <p class="muted">Rédigé par ${escapeHtml(nomMembre(r.utilisateur_id))}. Vérifie le contenu, puis approuve ou renvoie avec un motif.</p>
+    ${r.commentaire_revision ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:700;color:#7A5B00;">Dernier motif de renvoi</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(r.commentaire_revision)}</div></div>` : ""}
+    <div class="pdf-preview">
+      <h2>${escapeHtml(f.titre||"Rapport de chantier")}</h2>
+      <div class="meta">${r.date_rapport ? formatDateRapport(r.date_rapport) : ""} · Météo: ${escapeHtml(f.meteo||"-")} · Travailleurs: ${escapeHtml(String(f.nb_travailleurs||"-"))}</div>
+      ${htmlRapportComplet()}
+    </div>
+    ${htmlErreurPhotos()}
+    <button class="btn btn-primary" onclick="approuverRevue('${r.id}')">Approuver</button>
+    <button class="btn btn-danger" onclick="renvoyerRevue('${r.id}')">Renvoyer avec un motif</button>
+  </main>`;
 }
 
 function renderGestionEntreprise(){
@@ -976,6 +1798,17 @@ function renderGestionEntreprise(){
     <div class="field-icon"><span class="ic">📞</span><input type="text" id="ge-urgence" value="${e.contact_urgence||""}"></div>
     <button class="btn btn-primary" id="btn-enregistrer-entreprise">Enregistrer les modifications</button>
 
+    <div class="muted" style="margin:16px 0 6px;">Approbation des rapports</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div>
+          <div style="font-size:13.5px;">Exiger l'approbation</div>
+          <div class="muted" style="font-size:11.5px;margin-top:2px;">Les rapports des employés doivent être approuvés par un gestionnaire ou un administrateur avant l'envoi au client.</div>
+        </div>
+        <input type="checkbox" ${e.approbation_requise?'checked':''} onchange="basculerApprobation(this.checked)" style="width:20px;height:20px;flex:none;">
+      </div>
+    </div>
+
     <div class="muted" style="margin:16px 0 6px;">Rôles de l'entreprise</div>
     <div class="card">
       ${(e.roles||[]).map(r=>`
@@ -991,11 +1824,30 @@ function renderGestionEntreprise(){
 
     <div class="muted" style="margin:16px 0 6px;">Membres de l'équipe</div>
     <div class="card">
-      ${(state.membres||[]).map(m=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
-          <div><div style="font-size:13.5px;">${escapeHtml(m.nom||m.email)}</div><div class="muted" style="font-size:11.5px;">${escapeHtml(m.email)}</div></div>
-          <span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#E6F4EA;color:#1E7B34;">${escapeHtml(m.role||"")}</span>
-        </div>`).join("") || `<p class="muted">Aucun membre pour l'instant.</p>`}
+      ${(state.membres||[]).map(m=>{
+        const moi = !!(state.authUser && m.auth_id === state.authUser.id);
+        const inactif = m.actif === false;
+        const rolesDispo = [...new Set([...(e.roles||[]), m.role].filter(Boolean))];
+        const dernierAdmin = m.role === "Administrateur" && !inactif && nbAdminsActifs() <= 1;
+        return `
+        <div style="padding:8px 0;border-bottom:1px solid var(--border);${inactif?'opacity:.55;':''}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <div style="min-width:0;">
+              <div style="font-size:13.5px;">${escapeHtml(m.nom||m.email)}${moi?' <span class="muted">(vous)</span>':''}</div>
+              <div class="muted" style="font-size:11.5px;">${escapeHtml(m.email)}</div>
+            </div>
+            ${inactif ? `<span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#EEE;color:#555;">Désactivé</span>` : ``}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px;">
+            ${inactif
+              ? `<span class="muted" style="font-size:12px;">${escapeHtml(m.role||"")}</span>`
+              : `<select onchange="changerRoleMembre('${m.id}', this.value)" ${(moi||dernierAdmin)?'disabled':''} style="width:auto;padding:6px 8px;font-size:12.5px;">${rolesDispo.map(r=>`<option ${r===m.role?'selected':''}>${escapeHtml(r)}</option>`).join("")}</select>`}
+            ${moi ? `` : (inactif
+              ? `<button onclick="changerStatutMembre('${m.id}', true)" style="background:none;border:none;color:var(--green);font-size:12.5px;cursor:pointer;">Réactiver</button>`
+              : `<button onclick="changerStatutMembre('${m.id}', false)" style="background:none;border:none;color:var(--refuse);font-size:12.5px;cursor:pointer;">Retirer</button>`)}
+          </div>
+        </div>`;
+      }).join("") || `<p class="muted">Aucun membre pour l'instant.</p>`}
     </div>
 
     <label style="margin-top:16px;">Courriel du membre à inviter</label><input type="email" id="ge-invite-email" placeholder="Ex: jean.tremblay@const...">
@@ -1016,33 +1868,53 @@ function renderGestionEntreprise(){
         </div>`).join("")}
     </div>` : ""}
 
-    <button class="btn btn-danger" style="margin-top:16px;" onclick="effacerSession();state.user=null;state.accessToken=null;state.authUser=null;go('accueil')">Se déconnecter</button>
+    <button class="btn btn-danger" style="margin-top:16px;" onclick="seDeconnecter()">Se déconnecter</button>
+  </main>`;
+}
+
+function renderMonProfil(){
+  const u = state.user || {};
+  return `
+  ${header("Mon profil","go('mesProjets')")}
+  <main>
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;">${escapeHtml(u.nom||"")}</div>
+      <div class="muted">${escapeHtml(u.courriel||"")}</div>
+      <div style="margin-top:8px;"><span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#E6F4EA;color:#1E7B34;">${escapeHtml(u.role||"")}</span></div>
+      <div class="muted" style="margin-top:8px;">${escapeHtml((state.entreprise&&state.entreprise.nom_entreprise)||"")}</div>
+    </div>
+    <button class="btn btn-danger" style="margin-top:16px;" onclick="seDeconnecter()">Se déconnecter</button>
   </main>`;
 }
 
 function renderCreerRapport(){
   const f = state.rapportForm;
-  const photoThumbs = f.photos.map(p=>`<img src="${p.previewUrl}">`).join("");
+  const photoThumbs = f.photos.map((p,i)=>`<div style="position:relative;"><img src="${p.previewUrl}"><button type="button" onclick="retirerPhoto(${i})" aria-label="Retirer la photo" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--refuse);color:#fff;font-size:12px;line-height:20px;padding:0;cursor:pointer;">×</button></div>`).join("");
   return `
   ${header("Nouveau rapport","go('detailProjet')")}
   <main>
-    <label>Titre *</label><input type="text" id="rf-titre" value="${f.titre}" placeholder="Titre du rapport">
+    <label>Titre *</label><input type="text" id="rf-titre" value="${escapeHtml(f.titre)}" placeholder="Titre du rapport">
     <label>Description des travaux</label>
     <div class="field-with-mic">
-      <textarea id="rf-description" placeholder="Description des travaux">${f.description}</textarea>
+      <textarea id="rf-description" placeholder="Description des travaux">${escapeHtml(f.description)}</textarea>
       <button type="button" class="mic-btn ${recordingField==='description'?'recording':''}" onclick="toggleMic('description', this)">🎤</button>
     </div>
     <div class="row">
-      <div><label>Observations</label><input type="text" id="rf-observations" value="${f.observations}"></div>
-      <div><label>Visiteurs</label><input type="text" id="rf-visiteurs" value="${f.visiteurs}"></div>
-      <div><label>EPI</label><input type="text" id="rf-epi" value="${f.epi}"></div>
+      <div><label>Observations</label><input type="text" id="rf-observations" value="${escapeHtml(f.observations)}"></div>
+      <div><label>Visiteurs</label><input type="text" id="rf-visiteurs" value="${escapeHtml(f.visiteurs)}"></div>
+      <div><label>EPI</label><input type="text" id="rf-epi" value="${escapeHtml(f.epi)}"></div>
     </div>
     <button type="button" class="mic-btn ${recordingField==='observations'?'recording':''}" style="position:static;margin-top:4px;" onclick="toggleMic('observations', this)">🎤 Dicter les observations</button>
-    <div class="row">
-      <div><label>Météo</label><input type="text" id="rf-meteo" value="${f.meteo}"></div>
-      <div><label>Nb travailleurs</label><input type="number" id="rf-nb" value="${f.nb_travailleurs}"></div>
+    <label>Actions à prévoir (facultatif)</label>
+    <div class="field-with-mic">
+      <textarea id="rf-actions" placeholder="Ex: inspection des conduites jeudi, relancer le fournisseur de béton">${escapeHtml(f.actions||"")}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='actions'?'recording':''}" onclick="toggleMic('actions', this)">🎤</button>
     </div>
-    <label>Photos du chantier</label>
+    <div class="row">
+      <div><label>Météo</label><input type="text" id="rf-meteo" value="${escapeHtml(f.meteo)}"></div>
+      <div><label>Nb travailleurs</label><input type="number" id="rf-nb" value="${escapeHtml(f.nb_travailleurs)}"></div>
+    </div>
+    <label>Photos du chantier (${f.photos.length}/${MAX_PHOTOS_RAPPORT})</label>
     <input type="file" id="rf-photos" accept="image/*" multiple capture="environment">
     <div class="photo-thumbs">${photoThumbs}</div>
     <button class="btn btn-primary" id="btn-generer">Générer avec IA</button>
@@ -1051,16 +1923,68 @@ function renderCreerRapport(){
 }
 
 function renderGenerationIA(){
-  const loading = !state.contenuGenere;
-  return `
-  ${header("Génération du rapport","go('creerRapport')")}
+  const entete = header("Génération du rapport","go('creerRapport')");
+  if(state.enGeneration){
+    return `${entete}<main><p><span class="spinner"></span>Génération en cours...</p></main>`;
+  }
+  if(state.erreurGeneration){
+    return `${entete}
+    <main>
+      <div class="card" style="border-left:4px solid var(--refuse);">
+        <div style="font-weight:700;color:var(--refuse);">La génération a échoué</div>
+        <div style="font-size:13px;margin-top:6px;white-space:pre-wrap;">${escapeHtml(state.erreurGeneration)}</div>
+      </div>
+      <p class="muted">Aucun rapport n'a été créé. Tu peux réessayer ou revenir au formulaire.</p>
+      <button class="btn btn-primary" id="btn-regenerer">Réessayer</button>
+      <button class="btn btn-outline" onclick="go('creerRapport')">Retour au formulaire</button>
+    </main>`;
+  }
+  if(!state.contenuGenere){
+    return `${entete}
+    <main>
+      <p class="muted">Aucun contenu à afficher pour ce rapport.</p>
+      <button class="btn btn-outline" onclick="go('creerRapport')">Retour au formulaire</button>
+    </main>`;
+  }
+
+  const parsed = parseSections(state.contenuGenere);
+  const re = rapportEnEditionObj();
+  const photos = state.rapportForm.photos || [];
+  const legendes = (state.photoSections || []).map((x, i) => ({ x, i })).filter(o => photos[o.x.photo - 1]);
+
+  const champsSections = parsed.trouve
+    ? SECTIONS_RAPPORT.map((sec, i) => `
+      <label>${escapeHtml(sec)}${SECTIONS_FACULTATIVES.includes(sec) ? " (facultatif)" : ""}</label>
+      <textarea oninput="majSection(${i}, this.value)" style="min-height:${["Résumé","Travaux effectués","Observations"].includes(sec) ? 170 : 100}px;">${escapeHtml(parsed.sections[sec] || "")}</textarea>`).join("")
+    : `<label>Contenu du rapport</label>
+       <textarea oninput="majBrut(this.value)" style="min-height:260px;">${escapeHtml(state.contenuGenere)}</textarea>`;
+
+  const blocPhotos = legendes.length ? `
+    <label>Photos : section et légende</label>
+    ${legendes.map(o => `
+      <div class="card" style="display:flex;gap:10px;align-items:flex-start;">
+        <img src="${photos[o.x.photo - 1].previewUrl}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;flex:none;">
+        <div style="flex:1;min-width:0;">
+          <div class="muted" style="font-size:11.5px;margin-bottom:4px;">Photo ${o.x.photo}${o.x.certitude ? " · certitude : " + escapeHtml(o.x.certitude) : ""}</div>
+          <select onchange="majSectionPhoto(${o.i}, this.value)" aria-label="Section de la photo ${o.x.photo}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px;">
+            ${SECTIONS_PHOTO.map(sx => `<option value="${escapeHtml(sx)}"${o.x.section === sx ? " selected" : ""}>${escapeHtml(sx)}</option>`).join("")}
+            <option value=""${SECTIONS_PHOTO.includes(o.x.section) ? "" : " selected"}>Annexe (sans section)</option>
+          </select>
+          <textarea oninput="majLegende(${o.i}, this.value)" placeholder="Légende de la photo" style="min-height:64px;">${escapeHtml(o.x.legende || "")}</textarea>
+        </div>
+      </div>`).join("")}` : "";
+
+  return `${entete}
   <main>
-    ${loading ? `<p><span class="spinner"></span>Génération en cours...</p>` : `<p style="color:var(--green);font-weight:600;">✓ Rapport généré avec succès</p>`}
-    <div class="card" style="white-space:pre-wrap;min-height:200px;font-size:13.5px;">${loading?"":formatRapportAffichage(state.contenuGenere)}</div>
-    ${!loading ? `
-      <button class="btn btn-primary" id="btn-approuver">Approuver et continuer</button>
-      <button class="btn btn-warning" id="btn-regenerer">Régénérer</button>
-    ` : ""}
+    <p style="color:var(--green);font-weight:600;">✓ ${state.rapportEnEdition ? "Brouillon ouvert" : "Rapport généré"}</p>
+    ${(re && re.commentaire_revision) ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:700;color:#7A5B00;">Rapport renvoyé: à corriger</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(re.commentaire_revision)}</div></div>` : ""}
+    <p class="muted">Relis le texte produit par l'IA et corrige-le au besoin avant d'enregistrer. L'IA n'a utilisé que ce que tu as saisi et ce qui est visible sur les photos.</p>
+    ${champsSections}
+    ${blocPhotos}
+    <button class="btn btn-primary" id="btn-approuver">${libelleValidation()}</button>
+    <button class="btn btn-outline" id="btn-brouillon">Enregistrer le brouillon</button>
+    <button class="btn btn-warning" id="btn-regenerer">Régénérer</button>
+    ${state.rapportEnEdition ? `<button class="btn btn-danger" onclick="supprimerBrouillon('${state.rapportEnEdition}')">Supprimer le brouillon</button>` : ""}
   </main>`;
 }
 
@@ -1085,12 +2009,20 @@ function renderPdfPreview(){
     ${dbBadge()}
     <p class="muted">Vérifie le rapport avant de le télécharger ou de l'envoyer.</p>
     <div class="pdf-preview">
-      <h2>${f.titre||"Rapport de chantier"}</h2>
-      <div class="meta">${new Date().toLocaleDateString('fr-CA')} · Météo: ${f.meteo||"-"} · Travailleurs: ${f.nb_travailleurs||"-"}</div>
-      <div style="white-space:pre-wrap;">${formatRapportAffichage(state.contenuGenere)}</div>
+      <h2>${escapeHtml(f.titre||"Rapport de chantier")}</h2>
+      <div class="meta">${(()=>{ const rc = rapportCourant(); return rc && rc.date_rapport ? formatDateRapport(rc.date_rapport) : new Date().toLocaleDateString('fr-CA'); })()} · Météo: ${escapeHtml(f.meteo||"-")} · Travailleurs: ${escapeHtml(String(f.nb_travailleurs||"-"))}</div>
+      ${htmlRapportComplet()}
     </div>
-    <button class="btn btn-primary" id="btn-telecharger">Télécharger le PDF</button>
-    <button class="btn btn-outline" onclick="go('envoiPDF')">Envoyer par email</button>
+    ${htmlErreurPhotos()}
+    ${(()=>{
+      const r = rapportCourant();
+      const st = r ? r.statut_rapport : "Approuvé";
+      const bandeau = st === "Approuvé" ? "" : `<div class="card" style="border-left:4px solid var(--suspendu);font-size:13px;">${st === "À approuver" ? "Ce rapport est en attente d'approbation. Il ne peut pas encore être envoyé." : "Ce rapport est un brouillon. Il ne peut pas encore être envoyé."}</div>`;
+      return bandeau
+        + `<button class="btn btn-primary" id="btn-telecharger">Télécharger le PDF</button>`
+        + (st === "Approuvé" ? `<button class="btn btn-outline" onclick="go('envoiPDF')">Envoyer par email</button>` : "")
+        + ((st === "Approuvé" && r && estAdmin()) ? `<button class="btn btn-warning" onclick="rouvrirRapport('${r.id}')">Rouvrir le rapport</button>` : "");
+    })()}
   </main>`;
 }
 
@@ -1117,9 +2049,9 @@ function renderOnboarding1(){
   const f = state.onboardingForm;
   return `
   ${header("Créer mon entreprise")}
-  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:33%;background:var(--accent);"></div></div>
+  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:50%;background:var(--accent);"></div></div>
   <main>
-    <p class="muted center">Étape 1 sur 3 — Informations de l'entreprise</p>
+    <p class="muted center">Étape 1 sur 2 — Informations de l'entreprise</p>
     <div class="center">
       <label for="ob-logo-upload" style="cursor:pointer;display:block;">
         ${state.onboardingForm.logoBase64
@@ -1143,13 +2075,13 @@ function renderOnboarding2(){
   const f = state.onboardingForm;
   return `
   ${header("Créer mon entreprise","go('onboardingEtape1')")}
-  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:66%;background:var(--accent);"></div></div>
+  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:100%;background:var(--accent);"></div></div>
   <main>
-    <p class="muted center">Étape 2 sur 3 — Confirmation de votre entreprise</p>
+    <p class="muted center">Étape 2 sur 2 — Confirmation de votre entreprise</p>
     <div class="center" style="margin:14px 0;">
       <div style="width:60px;height:60px;border-radius:50%;background:var(--green);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">✓</div>
-      <p style="font-weight:600;color:var(--green);">Votre entreprise est créée !</p>
-      <p class="muted">Retrouvez et modifiez vos informations dans Mon entreprise</p>
+      <p style="font-weight:600;color:var(--green);">Vérifiez vos informations</p>
+      <p class="muted">Vous pourrez les modifier plus tard dans Mon entreprise</p>
     </div>
     <div class="card">
       <div class="field-icon"><span class="ic">🏢</span><input type="text" value="${f.nom_entreprise}" readonly></div>
@@ -1158,24 +2090,7 @@ function renderOnboarding2(){
       <div class="field-icon"><span class="ic">✉️</span><input type="text" value="${f.email}" readonly></div>
       <div class="field-icon"><span class="ic">📞</span><input type="text" value="${f.contact_urgence}" readonly></div>
     </div>
-    <button class="btn btn-primary" onclick="go('onboardingEtape3')">Continuer</button>
-  </main>`;
-}
-
-function renderOnboarding3(){
-  return `
-  ${header("Créer mon entreprise")}
-  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:100%;background:var(--accent);"></div></div>
-  <main>
-    <p class="muted center">Étape 3 sur 3 — Paramètres d'approbation</p>
-    <p>L'approbation permet de soumettre chaque rapport à un membre désigné avant envoi au client.</p>
-    <div class="row" style="align-items:center;">
-      <div>Activer l'approbation</div>
-      <div style="text-align:right;">
-        <input type="checkbox" id="ob-approbation" ${state.approbationActive?"checked":""} style="width:20px;height:20px;">
-      </div>
-    </div>
-    <button class="btn btn-primary" id="btn-terminer-onboarding">Terminer</button>
+    <button class="btn btn-primary" id="btn-terminer-onboarding">Créer mon entreprise</button>
   </main>`;
 }
 
@@ -1206,7 +2121,7 @@ function dbBadge(){
   if(state.dbStatus==="fallback") return `<div class="badge-sim">⚠ Supabase indisponible — sauvegardé localement pour ce test seulement.<br><span style="font-family:monospace;font-size:10px;">${escapeHtml(lastDbError)}</span></div>`;
   return "";
 }
-function escapeHtml(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function escapeHtml(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 function formatRapportAffichage(s){ return escapeHtml(s).replace(/^## (.+)$/gm, '<strong style="color:var(--green)">$1</strong>'); }
 
 function attachHandlers(){
@@ -1239,16 +2154,17 @@ function attachHandlers(){
   };
   const p = document.getElementById("rf-photos");
   if(p) p.onchange = (e)=> ajouterPhotos(e.target.files);
-  const champIds = { titre:"rf-titre", description:"rf-description", observations:"rf-observations", visiteurs:"rf-visiteurs", epi:"rf-epi", meteo:"rf-meteo", nb_travailleurs:"rf-nb" };
+  const champIds = { titre:"rf-titre", description:"rf-description", observations:"rf-observations", actions:"rf-actions", visiteurs:"rf-visiteurs", epi:"rf-epi", meteo:"rf-meteo", nb_travailleurs:"rf-nb" };
   Object.keys(champIds).forEach(k=>{
     const elm = document.getElementById(champIds[k]);
     if(elm) elm.oninput = (e)=> state.rapportForm[k]=e.target.value;
   });
   const bg = document.getElementById("btn-generer");
   if(bg) bg.onclick = ()=>{ if(!state.rapportForm.titre){ showToast("Le titre est requis."); return; } genererRapport(); };
-  const ba = document.getElementById("btn-approuver"); if(ba) ba.onclick = approuverRapport;
-  const br = document.getElementById("btn-regenerer"); if(br) br.onclick = genererRapport;
-  const baf = document.getElementById("btn-approuver-final"); if(baf) baf.onclick = approuverRapport;
+  const ba = document.getElementById("btn-approuver"); if(ba) ba.onclick = ()=>enregistrerRapport(statutCibleValidation());
+  const bbr = document.getElementById("btn-brouillon"); if(bbr) bbr.onclick = ()=>enregistrerRapport("Brouillon");
+  const br = document.getElementById("btn-regenerer"); if(br) br.onclick = regenererAvecConfirmation;
+  const baf = document.getElementById("btn-approuver-final"); if(baf) baf.onclick = ()=>enregistrerRapport(statutCibleValidation());
   const bt = document.getElementById("btn-telecharger"); if(bt) bt.onclick = genererPDF;
   const be = document.getElementById("btn-envoyer"); if(be) be.onclick = envoyerSimule;
   const logoInput = document.getElementById("ob-logo-upload");
@@ -1275,11 +2191,7 @@ function attachHandlers(){
     go("onboardingEtape2");
   };
   const bt3 = document.getElementById("btn-terminer-onboarding");
-  if(bt3) bt3.onclick = ()=>{
-    const chk = document.getElementById("ob-approbation");
-    state.approbationActive = chk ? chk.checked : false;
-    terminerOnboarding();
-  };
+  if(bt3) bt3.onclick = ()=>{ terminerOnboarding(); };
   const bge = document.getElementById("btn-enregistrer-entreprise");
   if(bge) bge.onclick = enregistrerEntreprise;
 }
