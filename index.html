@@ -31,11 +31,17 @@
   }
   textarea{resize:vertical;min-height:60px;}
   .field-with-mic{position:relative;}
+  .field-with-mic textarea{padding-right:40px;}
+  .carte-rapport{border:1px solid var(--border);border-left:4px solid #9AA3A8;border-radius:10px;padding:10px 12px;margin:8px 0;cursor:pointer;background:#fff;}
+  .carte-rapport .cr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .carte-rapport .cr-titre{font-weight:600;min-width:0;}
+  .carte-rapport .cr-num{font-size:11.5px;font-weight:700;color:var(--grey);margin-right:6px;}
+  .carte-rapport .cr-meta{font-size:12px;color:var(--grey);margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
   .toggle-pwd{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--grey);display:flex;align-items:center;padding:2px;}
   .toggle-pwd:hover{color:var(--dark);}
   .pwd-wrap{position:relative;}
   .pwd-wrap input{padding-right:38px;}
-  .mic-btn{position:absolute;right:8px;top:32px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--grey);}
+  .mic-btn{position:absolute;right:8px;bottom:10px;background:none;border:none;font-size:14px;cursor:pointer;color:var(--grey);display:inline-flex;align-items:center;gap:6px;padding:4px;}
   .mic-btn.recording{color:var(--refuse);animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
   .btn{display:block;width:100%;padding:13px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;text-align:center;}
@@ -75,6 +81,48 @@
   .field-icon{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:12px;}
   .field-icon input{border:none;padding:0;flex:1;}
   .field-icon .ic{color:var(--grey);}
+  .field-icon{transition:border-color .15s, box-shadow .15s;background:#fff;}
+  .field-icon:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(67,160,71,.15);}
+  .field-icon .ic{display:flex;color:var(--grey);transition:color .15s;}
+  .field-icon:focus-within .ic{color:var(--green);}
+  .field-icon input{outline:none;background:transparent;font-size:15px;}
+  .field-icon.invalide{border-color:var(--refuse);box-shadow:0 0 0 3px rgba(229,57,53,.12);}
+  .ent-hero{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#2E7D32,#43A047);color:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 4px 14px rgba(46,125,50,.25);}
+  .ent-avatar{width:68px;height:68px;border-radius:18px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:1px;overflow:hidden;flex:none;}
+  .ent-avatar img{width:100%;height:100%;object-fit:cover;}
+  .ent-nom{font-size:19px;font-weight:700;line-height:1.2;word-break:break-word;}
+  .ent-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .ent-pill{background:rgba(255,255,255,.2);border-radius:999px;padding:3px 10px;font-size:11.5px;}
+  .sec-titre{font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--grey);margin:20px 4px 8px;}
+  .card-pro{background:#fff;border:1px solid var(--border);border-radius:14px;padding:6px 14px 14px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .card-pro label{font-size:12px;font-weight:600;color:var(--dark);margin-top:12px;display:block;}
+  .card-pro .field-icon{margin-top:6px;}
+  .aide-champ{font-size:11.5px;color:var(--grey);margin:4px 2px 0;}
+  .aide-champ.erreur{color:var(--refuse);}
+  .interrupteur{position:relative;width:46px;height:26px;flex:none;}
+  .interrupteur input{opacity:0;width:100%;height:100%;margin:0;position:absolute;inset:0;cursor:pointer;z-index:2;}
+  .interrupteur .piste{position:absolute;inset:0;border-radius:999px;background:#CFD8DC;transition:background .2s;}
+  .interrupteur .piste::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s;}
+  .interrupteur input:checked + .piste{background:var(--green);}
+  .interrupteur input:checked + .piste::after{transform:translateX(20px);}
+  .pastille{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;}
+  .pastille.role{background:#E8F5E9;color:#2E7D32;}
+  .pastille.off{background:#ECEFF1;color:#546E7A;}
+  .pastille.attente{background:#FFF3CD;color:#7A5B00;}
+  .ligne-pro{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .ligne-pro:last-child{border-bottom:none;}
+  .avatar-m{width:42px;height:42px;border-radius:50%;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .nom-m{font-size:14.5px;font-weight:600;color:var(--dark);word-break:break-word;}
+  .btn-menu{background:#F5F7F8;border:1px solid var(--border);color:var(--dark);width:36px;height:36px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;padding:0;}
+  .btn-menu:hover{background:#ECEFF1;}
+  .vide-pro{color:var(--grey);font-size:13px;text-align:center;padding:18px 8px;}
+  .puces{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .puce{border:1px solid var(--border);background:#fff;color:var(--dark);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer;}
+  .puce.actif{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
+  .sheet .item-menu{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;margin-top:8px;cursor:pointer;}
+  .sheet .item-menu.actif{border-color:var(--green);background:#E8F5E9;font-weight:600;}
+  .sheet .item-menu.danger{color:var(--refuse);}
+  .btn:disabled{background:#CFD8DC;color:#fff;cursor:not-allowed;box-shadow:none;}
   .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:1000;}
   .sheet{background:#fff;width:100%;max-width:430px;border-radius:16px 16px 0 0;padding:18px;}
   .sheet .btn{margin-top:10px;}
@@ -101,13 +149,16 @@ let state = {
   projets: [],
   rapports: [], // tous rapports (mock/local + supabase)
   currentProjetId: null,
-  rapportForm: { titre:"", description:"", observations:"", actions:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] },
+  rapportForm: { titre:"", description:"", observations:"", actions:"", portee:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] },
   contenuGenere: "",
   currentRapportId: null,
   destinataires: [""],
   logoBase64: DEFAULT_LOGO_B64,
   photoSections: [],
   photosChargees: [],
+  liste: { projetId:null, q:'', statut:'', auteur:'', periode:'', items:[], aTraiter:[], total:0, taille:20, chargement:false, erreur:null, photos:{}, replies:{}, jeton:0 },
+  resumeProjet: null,
+  filtreProjets: { q:'', statut:'' },
   erreurPhotos: null,
   enregistrementEnCours: false,
   ouvertureEnCours: false,
@@ -205,9 +256,9 @@ async function sbSignIn(email, password){
 }
 
 /* ================= IA via Edge Function Supabase (OpenAI côté serveur) ================= */
-const SECTIONS_RAPPORT = ["Résumé","Travaux effectués","Observations","Sécurité et EPI","Conditions et main-d'œuvre","Actions à prévoir","Points à vérifier"];
+const SECTIONS_RAPPORT = ["Résumé","Travaux effectués","Observations","Sécurité et EPI","Conditions et main-d'œuvre","Portée de la visite","Actions à prévoir","Points à vérifier"];
 const SECTIONS_PHOTO = ["Travaux effectués","Observations","Sécurité et EPI","Conditions et main-d'œuvre"];
-const SECTIONS_FACULTATIVES = ["Actions à prévoir","Points à vérifier"];
+const SECTIONS_FACULTATIVES = ["Portée de la visite","Actions à prévoir","Points à vérifier"];
 const MAX_PHOTOS_RAPPORT = 8;
 
 function echapperRegex(t){ return t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
@@ -241,6 +292,7 @@ function construireDepuisRapport(R){
     "Observations": R.observations || "",
     "Sécurité et EPI": R.securite_epi || "",
     "Conditions et main-d'œuvre": R.conditions_main_oeuvre || "",
+    "Portée de la visite": R.portee_visite || "",
     "Actions à prévoir": (R.actions_a_prevoir || []).map(x => "- " + x).join("\n"),
     "Points à vérifier": (R.points_a_verifier || []).map(x => "- " + x).join("\n")
   };
@@ -257,7 +309,7 @@ async function genererRapportIA(form){
       method:"POST",
       headers:{ ...authHeaders(), "Content-Type":"application/json" },
       body: JSON.stringify({
-        titre: form.titre, description: form.description, observations: form.observations, actions: form.actions,
+        titre: form.titre, description: form.description, observations: form.observations, actions: form.actions, portee: form.portee,
         visiteurs: form.visiteurs, epi: form.epi, meteo: form.meteo, nb_travailleurs: form.nb_travailleurs,
         photos: form.photos.map(p=>({ base64:p.base64, mediaType:p.mediaType }))
       })
@@ -313,6 +365,37 @@ async function transcrireAudio(audioBlob){
 let mediaRecorder = null;
 let audioChunks = [];
 let recordingField = null;
+function creerReconnaissanceDirect(fieldKey, base){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  try{
+    const rec = new SR();
+    rec.lang = "fr-CA"; rec.continuous = true; rec.interimResults = true;
+    let finaux = "";
+    const sep = base ? base + " " : "";
+    const afficher = (interim)=>{
+      const texte = sep + (finaux + (interim || "")).trim();
+      state.rapportForm[fieldKey] = texte;
+      const el = document.getElementById("rf-" + fieldKey);
+      if(el){ el.value = texte; ajusterHauteur(el); el.scrollTop = el.scrollHeight; }
+    };
+    rec.onresult = (ev)=>{
+      let interim = "";
+      for(let i = ev.resultIndex; i < ev.results.length; i++){
+        const t = ev.results[i][0].transcript;
+        if(ev.results[i].isFinal) finaux += t + " "; else interim += t;
+      }
+      afficher(interim);
+    };
+    rec.onerror = ()=>{};
+    rec.onend = ()=>{ if(rec.actif){ try{ rec.start(); }catch(e){} } };
+    rec.actif = true;
+    rec.apercu = ()=> (finaux).trim();
+    rec.start();
+    return rec;
+  }catch(e){ return null; }
+}
+
 async function toggleMic(fieldKey, btnEl){
   if(mediaRecorder && recordingField === fieldKey){
     mediaRecorder.stop();
@@ -324,27 +407,101 @@ async function toggleMic(fieldKey, btnEl){
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
     recordingField = fieldKey;
+    const base = state.rapportForm[fieldKey] || "";
     btnEl.classList.add("recording");
+    // Aperçu en direct (si le navigateur le permet); le texte Whisper, plus précis, le remplace à la fin
+    const direct = creerReconnaissanceDirect(fieldKey, base);
     mediaRecorder.ondataavailable = (e)=> audioChunks.push(e.data);
     mediaRecorder.onstop = async ()=>{
       stream.getTracks().forEach(t=>t.stop());
-      recordingField = null; render();
+      let apercu = "";
+      if(direct){ direct.actif = false; try{ direct.stop(); }catch(e){} apercu = direct.apercu(); }
+      recordingField = null;
+      const valeurApercu = state.rapportForm[fieldKey];
+      render();
       showToast("Transcription en cours...");
       const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
       const texte = await transcrireAudio(blob);
+      const sep = base ? base + " " : "";
       if(texte){
-        state.rapportForm[fieldKey] = (state.rapportForm[fieldKey] ? state.rapportForm[fieldKey]+" " : "") + texte;
+        // Remplace l'aperçu par le texte Whisper, sauf si la personne a modifié le champ entre-temps
+        if(!direct || state.rapportForm[fieldKey] === valeurApercu){ state.rapportForm[fieldKey] = sep + texte; }
+        else showToast("Texte modifié pendant la transcription: la version précise n'a pas remplacé ton texte.");
         render();
+      }else if(apercu){
+        showToast("Transcription précise indisponible: l'aperçu en direct est conservé.");
       }
     };
     mediaRecorder.start();
     render();
+    // render() recrée le champ: on le remplit à nouveau avec le texte déjà reçu
+    const el = document.getElementById("rf-" + fieldKey);
+    if(el){ el.value = state.rapportForm[fieldKey] || ""; ajusterHauteur(el); }
   }catch(e){
     showToast("Micro inaccessible: " + (e.message || e));
   }
 }
 
 /* ================= UTILITAIRES ================= */
+const MIC_SVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3M9 21h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CAM_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:inline-block;vertical-align:-2px;"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" stroke="currentColor" stroke-width="1.8"/></svg>`;
+const ICONES = {
+  immeuble:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16"/><path d="M14 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M8 8h2M8 12h2M8 16h2M17 14h1M17 18h1"/></svg>`,
+  licence:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 17c.6-1.8 2-2.6 3.5-2.6s2.9.8 3.5 2.6"/><path d="M15 9.5h3.5M15 13h3.5"/></svg>`,
+  lieu:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>`,
+  courriel:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>`,
+  telephone:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>`
+};
+const ROLES_BASE = ["Administrateur","Gestionnaire","Employé"];
+const ICONE_CORBEILLE = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3"/></svg>`;
+function descriptionRole(r){
+  if(!r) return "";
+  const niv = niveauRole(r);
+  if(niv==="Administrateur") return "Accès complet : gère l'entreprise, les membres, les projets et les approbations.";
+  const perso = !ROLES_BASE.includes(r);
+  if(niv==="Gestionnaire") return (perso?"Accès Gestionnaire : ":"") + (perso?"crée des":"Crée des rapports, approuve ceux de l'équipe et gère le statut des projets. Ne gère pas les membres.");
+  return (perso?"Accès Employé : ":"") + (perso?"crée des":"Crée des rapports de chantier, soumis à l'approbation d'un gestionnaire. Ne gère ni les membres ni les projets.");
+}
+function couleurRole(r){ return r==="Administrateur" ? "#2E7D32" : r==="Gestionnaire" ? "#1E88E5" : r==="Employé" ? "#78909C" : (niveauRole(r)==="Gestionnaire" ? "#5E35B1" : "#8E24AA"); }
+function nomAffiche(n){
+  return String(n||"").trim().split(/(\s+|-)/).map(w=>(w.length>1 && w===w.toUpperCase()) ? w[0]+w.slice(1).toLowerCase() : w).join("");
+}
+function choisirRoleInvitation(btn){
+  document.querySelectorAll("#ge-invite-puces .puce").forEach(b=>b.classList.remove("actif"));
+  btn.classList.add("actif");
+  document.getElementById("ge-invite-role").value = btn.dataset.role;
+  const a = document.getElementById("ge-invite-aide"); if(a) a.textContent = descriptionRole(btn.dataset.role);
+}
+function ouvrirMenuMembre(id){
+  const m = (state.membres||[]).find(x=>String(x.id)===String(id));
+  if(!m) return;
+  const e = state.entreprise || {};
+  const inactif = m.actif === false;
+  const roles = [...new Set([...(e.roles||[]), m.role].filter(Boolean))];
+  const overlay = document.createElement("div");
+  overlay.className = "sheet-overlay";
+  overlay.innerHTML = `<div class="sheet">
+    <h3 style="margin:0 0 2px;">${escapeHtml(m.nom ? nomAffiche(m.nom) : m.email)}</h3>
+    <div class="muted" style="margin-bottom:8px;">${escapeHtml(m.email||"")}</div>
+    ${inactif ? `` : `<div class="muted" style="font-size:12px;margin-top:8px;">Changer le rôle</div>
+    ${roles.map(r=>`<button class="item-menu${r===m.role?' actif':''}" data-role="${escapeHtml(r)}">${escapeHtml(r)}${r===m.role?' ✓':''}</button>`).join("")}`}
+    <button class="item-menu ${inactif?'':'danger'}" id="menu-statut">${inactif ? "Réactiver l'accès" : "Retirer de l'équipe"}</button>
+    <button class="btn btn-grey" id="menu-fermer">Fermer</button>
+  </div>`;
+  overlay.onclick = (ev)=>{ if(ev.target===overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+  overlay.querySelector("#menu-fermer").onclick = ()=>overlay.remove();
+  overlay.querySelectorAll("[data-role]").forEach(b=>{ b.onclick = ()=>{ overlay.remove(); if(b.dataset.role !== m.role) changerRoleMembre(m.id, b.dataset.role); }; });
+  overlay.querySelector("#menu-statut").onclick = ()=>{ overlay.remove(); changerStatutMembre(m.id, inactif); };
+}
+function champIcone(icone, id, valeur, opts){
+  opts = opts || {};
+  return `<div class="field-icon" id="fi-${id}"><span class="ic">${ICONES[icone]}</span><input type="${opts.type||"text"}" ${id?`id="${id}"`:""} value="${escapeHtml(valeur||"")}" ${opts.placeholder?`placeholder="${escapeHtml(opts.placeholder)}"`:""} ${opts.readonly?"readonly":""} ${opts.inputmode?`inputmode="${opts.inputmode}"`:""} autocomplete="off"></div>${opts.aide?`<div class="aide-champ" id="aide-${id}">${opts.aide}</div>`:""}`;
+}
+function initialesEntreprise(nom){
+  const m = String(nom||"").trim().split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]);
+  return (m.join("") || "CA").toUpperCase();
+}
 const EYE_OPEN_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>`;
 const EYE_OFF_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.6 20.6 0 015.06-5.94M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 7 11 7a20.7 20.7 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
 function togglePwd(id, btnEl){
@@ -369,7 +526,12 @@ function fileToBase64(file){
     r.readAsDataURL(file);
   });
 }
-function go(view){ state.view = view; state.modal = null; render(); }
+function ajusterHauteur(el){ el.style.height = "auto"; el.style.height = Math.min(Math.max(el.scrollHeight + 2, 64), 420) + "px"; }
+function go(view){
+  state.view = view; state.modal = null; render();
+  if(view === "listeRapports") chargerListeRapports(true);
+  if(view === "detailProjet") chargerResumeProjet();
+}
 
 /* ================= ACTIONS ================= */
 async function chargerEspaceUtilisateur(){
@@ -399,7 +561,7 @@ async function chargerEspaceUtilisateur(){
     const ent = await sbSelect("Entreprises", `select=*&id=eq.${state.user.entreprise_id}`);
     if(ent && ent[0]){
       state.entreprise = ent[0];
-      if(!state.entreprise.roles) state.entreprise.roles = ["Employé","Gestionnaire","Administrateur"];
+      await chargerRolesEntreprise();
       entrepriseValide = true;
     }else{
       // entreprise_id invalide (orpheline) — on nettoie côté client ET côté base pour ne plus retomber dessus
@@ -414,8 +576,8 @@ async function chargerEspaceUtilisateur(){
   if(entrepriseValide){
     const projets = await sbSelect("Projets", `select=*&entreprise_id=eq.${state.user.entreprise_id}`);
     state.projets = projets || [];
-    const rapports = await sbSelect("Rapports", `select=*&entreprise_id=eq.${state.user.entreprise_id}`);
-    state.rapports = rapports || [];
+    state.rapports = [];
+    await rafraichirRapports();
     state.dbStatus = projets ? "ok" : "fallback";
     go("mesProjets");
   }else{
@@ -491,7 +653,7 @@ async function ouvrirGestionEntreprise(){
   state.modal = null;
   state.view = "gestionEntreprise";
   render(); // affiche tout de suite, la liste arrive ensuite
-  await Promise.all([chargerInvitations(), chargerMembres()]);
+  await Promise.all([chargerInvitations(), chargerMembres(), chargerRolesEntreprise()]);
   render();
 }
 
@@ -501,6 +663,18 @@ async function chargerInvitations(){
   state.invitations = rows || [];
 }
 
+async function chargerRolesEntreprise(){
+  const base = ["Employé","Gestionnaire","Administrateur"];
+  if(!state.entreprise || !state.entreprise.id){ state.rolesPerso = []; return; }
+  const rows = await sbSelect("Roles_entreprise", `select=*&entreprise_id=eq.${state.entreprise.id}&order=nom.asc`);
+  state.rolesPerso = rows || [];
+  state.entreprise.roles = [...base, ...state.rolesPerso.map(r=>r.nom).filter(n=>!base.includes(n))];
+}
+function niveauRole(role){
+  if(ROLES_BASE.includes(role)) return role;
+  const r = (state.rolesPerso||[]).find(x=>x.nom===role);
+  return r ? r.niveau : "Employé";
+}
 async function chargerMembres(){
   if(!state.entreprise || !state.entreprise.id) return;
   const rows = await sbSelect("Utilisateurs", `select=*&entreprise_id=eq.${state.entreprise.id}&order=nom.asc`);
@@ -548,7 +722,7 @@ async function inviterMembre(){
       showToast(`Invitation envoyée à ${email}`);
     }
     emailEl.value = "";
-    await Promise.all([chargerInvitations(), chargerMembres()]);
+    await Promise.all([chargerInvitations(), chargerMembres(), chargerRolesEntreprise()]);
     render();
   }catch(e){
     showToast("Erreur réseau lors de l'invitation: " + (e.message||e));
@@ -716,6 +890,15 @@ async function enregistrerEntreprise(){
     email_facturation: document.getElementById("ge-email").value,
     contact_urgence: document.getElementById("ge-urgence").value
   };
+  const marquer = (id)=>{ const fi = document.getElementById("fi-"+id); if(fi){ fi.classList.add("invalide"); fi.scrollIntoView({block:"center"}); } };
+  updated.nom_entreprise = updated.nom_entreprise.trim();
+  updated.numero_rbq = updated.numero_rbq.trim();
+  updated.adresse_siege = updated.adresse_siege.trim();
+  updated.email_facturation = updated.email_facturation.trim();
+  updated.contact_urgence = updated.contact_urgence.trim();
+  if(!updated.nom_entreprise){ marquer("ge-nom"); showToast("Le nom de l'entreprise est requis."); return; }
+  if(updated.email_facturation && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updated.email_facturation)){ marquer("ge-email"); showToast("Le courriel n'est pas valide."); return; }
+  if(updated.contact_urgence && updated.contact_urgence.replace(/\D/g,"").length < 10){ marquer("ge-urgence"); showToast("Le numéro d'urgence doit contenir au moins 10 chiffres."); return; }
   if(!state.entreprise || !state.entreprise.id){ showToast("Erreur: entreprise introuvable."); return; }
   const r = await sbUpdate("Entreprises", `id=eq.${state.entreprise.id}`, updated);
   if(!r || !r[0]){
@@ -723,7 +906,7 @@ async function enregistrerEntreprise(){
     return;
   }
   state.entreprise = { ...state.entreprise, ...updated };
-  showToast("Informations de l'entreprise mises à jour.");
+  showToast("✓ Informations enregistrées.");
   render();
 }
 
@@ -740,17 +923,40 @@ async function basculerApprobation(valeur){
   render();
 }
 
-function ajouterRole(){
+function choisirNiveauNouveauRole(btn){
+  document.querySelectorAll("#nr-niveaux .puce").forEach(b=>b.classList.remove("actif"));
+  btn.classList.add("actif");
+  state.niveauNouveauRole = btn.dataset.niveau;
+  const a = document.getElementById("nr-aide");
+  if(a) a.textContent = btn.dataset.niveau==="Gestionnaire" ? "Peut approuver les rapports et gérer le statut des projets." : "Crée des rapports, soumis à approbation. Aucun droit de gestion.";
+}
+async function ajouterRole(){
+  if(!estAdmin()){ showToast("Accès réservé aux administrateurs."); return; }
   const input = document.getElementById("nouveau-role");
-  const nom = input.value.trim();
-  if(!nom){ showToast("Nom du rôle requis."); return; }
-  if(!state.entreprise.roles) state.entreprise.roles = [];
-  if(state.entreprise.roles.includes(nom)){ showToast("Ce rôle existe déjà."); return; }
-  state.entreprise.roles.push(nom);
+  const nom = input.value.trim().replace(/\s+/g," ");
+  const niveau = state.niveauNouveauRole || "Employé";
+  if(nom.length < 2){ showToast("Nom du rôle requis (2 caractères minimum)."); return; }
+  if(nom.length > 40){ showToast("Nom du rôle trop long (40 caractères maximum)."); return; }
+  if((state.entreprise.roles||[]).some(r=>r.toLowerCase()===nom.toLowerCase())){ showToast("Ce rôle existe déjà."); return; }
+  const r = await sbInsert("Roles_entreprise", { entreprise_id: state.entreprise.id, nom, niveau });
+  if(!r || !r[0]){
+    showToast("⚠ Le rôle n'a pas été enregistré : " + lastDbError + (/Roles_entreprise/.test(lastDbError) ? " (le fichier SQL module4a-roles-personnalises.sql a-t-il été exécuté ?)" : ""));
+    return;
+  }
+  state.niveauNouveauRole = "Employé";
+  await chargerRolesEntreprise();
+  showToast(`Rôle « ${nom} » créé (accès ${niveau}).`);
   render();
 }
-function retirerRole(nom){
-  state.entreprise.roles = state.entreprise.roles.filter(r=>r!==nom);
+async function retirerRole(nom){
+  if(!estAdmin()){ showToast("Accès réservé aux administrateurs."); return; }
+  if(ROLES_BASE.includes(nom)){ showToast("Les rôles de base ne peuvent pas être supprimés."); return; }
+  if((state.membres||[]).some(m=>m.role===nom && m.actif!==false)){ showToast("Ce rôle est attribué à un membre actif : change d'abord son rôle."); return; }
+  if(!confirm(`Supprimer le rôle « ${nom} » ?`)) return;
+  const r = await sbDelete("Roles_entreprise", `entreprise_id=eq.${state.entreprise.id}&nom=eq.${encodeURIComponent(nom)}`);
+  if(r === null){ showToast("⚠ Suppression refusée : " + messageErreurDb()); return; }
+  await chargerRolesEntreprise();
+  showToast(`Rôle « ${nom} » supprimé.`);
   render();
 }
 
@@ -770,8 +976,8 @@ async function creerProjet(nom, adresse, typeProjetId, description){
   go("mesProjets");
 }
 
-function ouvrirProjet(id){ state.currentProjetId = id; go("detailProjet"); }
-function resetRapportForm(){ state.rapportEnEdition = null; state.currentRapportId = null; state.rapportForm = { titre:"", description:"", observations:"", actions:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] }; state.photoSections = []; state.photosChargees = []; state.erreurPhotos = null; }
+function ouvrirProjet(id){ state.currentProjetId = id; state.resumeProjet = null; go("detailProjet"); }
+function resetRapportForm(){ state.rapportEnEdition = null; state.currentRapportId = null; state.rapportForm = { titre:"", description:"", observations:"", actions:"", portee:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] }; state.photoSections = []; state.photosChargees = []; state.erreurPhotos = null; }
 
 async function compresserImage(file, maxDim = 1600, qualite = 0.82){
   const url = URL.createObjectURL(file);
@@ -865,7 +1071,7 @@ function majLegende(i, valeur){
 
 /* ================= WORKFLOW D'APPROBATION ================= */
 function approbationRequise(){ return !!(state.entreprise && state.entreprise.approbation_requise); }
-function peutApprouver(){ return estAdmin() || !!(state.user && state.user.role === "Gestionnaire"); }
+function peutApprouver(){ return estAdmin() || !!(state.user && niveauRole(state.user.role) === "Gestionnaire"); }
 function statutCibleValidation(){ return (approbationRequise() && !peutApprouver()) ? "À approuver" : "Approuvé"; }
 function libelleValidation(){ return statutCibleValidation() === "À approuver" ? "Soumettre pour approbation" : "Approuver et continuer"; }
 function classeStatutRapport(st){
@@ -880,6 +1086,7 @@ function formatDateRapport(d){
   const dt = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(d);
   return dt.toLocaleDateString('fr-CA');
 }
+function numeroRapport(r){ return r && r.numero ? "RJ-" + String(r.numero).padStart(3, "0") : ""; }
 function rapportCourant(){ return state.rapports.find(x=>String(x.id)===String(state.currentRapportId)) || null; }
 function rapportEnEditionObj(){ return state.rapportEnEdition ? (state.rapports.find(x=>String(x.id)===String(state.rapportEnEdition)) || null) : null; }
 function nomMembre(id){
@@ -1140,16 +1347,37 @@ function htmlErreurPhotos(){
   return state.erreurPhotos ? `<div class="card" style="border-left:4px solid var(--refuse);font-size:13px;">⚠ Les photos de ce rapport n'ont pas pu être chargées (${escapeHtml(state.erreurPhotos)}). Reviens à la liste et rouvre le rapport pour réessayer.</div>` : "";
 }
 
-async function rafraichirRapports(){
-  if(!state.user || !state.user.entreprise_id) return;
-  const rows = await sbSelect("Rapports", `select=*&entreprise_id=eq.${state.user.entreprise_id}`);
-  if(rows) state.rapports = rows;
+const COLS_RAPPORT_LISTE = "id,numero,titre,date_rapport,statut_rapport,utilisateur_id,projet_id,entreprise_id,entree_terrain_id,commentaire_revision,approuve_par,approuve_le";
+
+function fusionnerRapports(rows){
+  (rows || []).forEach(n => {
+    const i = state.rapports.findIndex(x => String(x.id) === String(n.id));
+    if(i === -1) state.rapports.push(n); else state.rapports[i] = { ...state.rapports[i], ...n };
+  });
 }
 
-async function ouvrirListeRapports(){
-  await rafraichirRapports();
-  go("listeRapports");
+// Compte avec Content-Range (sans tout télécharger)
+async function sbSelectCount(table, query){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, { headers: { ...authHeaders(), Prefer: "count=exact" } });
+    if(!res.ok){ lastDbError = `SELECT ${table}: ${res.status} — ${await res.text()}`; console.warn(lastDbError); return null; }
+    const rows = await res.json();
+    const m = /\/(\d+)$/.exec(res.headers.get("Content-Range") || "");
+    return { rows, total: m ? Number(m[1]) : rows.length };
+  }catch(e){ lastDbError = e.message || String(e); console.warn(lastDbError); return null; }
 }
+
+// Rapports à approuver (pour le badge et la liste de revue): lignes légères
+async function rafraichirRapports(){
+  if(!state.user || !state.user.entreprise_id || !peutApprouver()) return;
+  const rows = await sbSelect("Rapports", `select=${COLS_RAPPORT_LISTE}&entreprise_id=eq.${state.user.entreprise_id}&statut_rapport=eq.${encodeURIComponent("À approuver")}&order=date_rapport.desc,id.desc&limit=200`);
+  if(rows){
+    state.rapports = state.rapports.filter(r => r.statut_rapport !== "À approuver");
+    fusionnerRapports(rows);
+  }
+}
+
+async function ouvrirListeRapports(){ go("listeRapports"); }
 
 async function ouvrirRapportsAApprouver(){
   await Promise.all([rafraichirRapports(), chargerMembres()]);
@@ -1158,15 +1386,18 @@ async function ouvrirRapportsAApprouver(){
 
 async function ouvrirRapport(id){
   if(state.ouvertureEnCours) return;
-  const r = state.rapports.find(x=>String(x.id)===String(id));
-  if(!r) return;
   state.ouvertureEnCours = true;
   showToast("Ouverture du rapport...");
   try{
-    const [ph] = await Promise.all([
-      chargerPhotosRapport(r.id),
+    const [lignes, ph] = await Promise.all([
+      sbSelect("Rapports", `select=*&id=eq.${encodeURIComponent(id)}`),
+      chargerPhotosRapport(id),
       (state.membres || []).length ? null : chargerMembres()
     ]);
+    if(lignes === null){ showToast("⚠ Impossible d'ouvrir le rapport (" + messageErreurDb() + ")."); return; }
+    if(!lignes[0]){ showToast("Ce rapport n'existe plus ou n'est plus accessible."); return; }
+    const r = lignes[0];
+    fusionnerRapports([r]);
     const estAuteur = !!(state.user && String(r.utilisateur_id) === String(state.user.id));
     const statut = r.statut_rapport || "";
     const editable = statut === "Brouillon" && (estAuteur || estAdmin());
@@ -1177,7 +1408,7 @@ async function ouvrirRapport(id){
     state.currentRapportId = id;
     state.currentProjetId = r.projet_id;
     state.contenuGenere = r.contenu_ia || "";
-    state.rapportForm = { titre:r.titre||"", description:r.description||"", observations:r.observations||"", actions:r.actions_prevoir||"", visiteurs:r.visiteurs||"", epi:r.epi||"", meteo:r.meteo||"", nb_travailleurs:r.nb_travailleurs||"", photos: ph.ok ? ph.photos : [] };
+    state.rapportForm = { titre:r.titre||"", description:r.description||"", observations:r.observations||"", actions:r.actions_prevoir||"", portee:r.portee_visite||"", visiteurs:r.visiteurs||"", epi:r.epi||"", meteo:r.meteo||"", nb_travailleurs:r.nb_travailleurs||"", photos: ph.ok ? ph.photos : [] };
     state.photoSections = ph.ok ? ph.photoSections : [];
     state.photosChargees = ph.ok ? ph.lignes : [];
     state.erreurPhotos = ph.ok ? null : ph.erreur;
@@ -1224,6 +1455,7 @@ async function enregistrerRapportInterne(cible){
     description: f.description,
     observations: f.observations,
     actions_prevoir: f.actions || "",
+    portee_visite: f.portee || "",
     meteo: f.meteo,
     nb_travailleurs: f.nb_travailleurs ? parseInt(f.nb_travailleurs) : null,
     visiteurs: f.visiteurs,
@@ -1411,6 +1643,7 @@ function genererPDF(){
     statutTxt = "Approuvé" + (rap.approuve_le ? " le " + new Date(rap.approuve_le).toLocaleDateString("fr-CA") : "") + (rap.approuve_par ? " par " + nomMembre(rap.approuve_par) : "");
   }
   const infos = [
+    ["Rapport n°", numeroRapport(rap)],
     ["Projet", proj ? [proj.nom_projet, proj.adresse_projet].filter(Boolean).join(", ") : ""],
     ["Entreprise", (state.entreprise && state.entreprise.nom_entreprise) || ""],
     ["Date", datePdf],
@@ -1476,6 +1709,17 @@ function genererPDF(){
     }
   });
 
+  // ----- Mention sur l'usage de l'IA -----
+  {
+    const note = "Ce rapport a été rédigé avec l'aide d'une intelligence artificielle à partir des informations saisies par l'équipe et des photos. Les observations visuelles ne remplacent pas une vérification professionnelle sur place.";
+    doc.setFont("helvetica","italic"); doc.setFontSize(8);
+    const lignes = doc.splitTextToSize(note, LARGEUR);
+    ensure(lignes.length * 3.6 + 8);
+    y += 4; doc.setTextColor(...GRIS);
+    lignes.forEach(l => { doc.text(l, MARGE, y); y += 3.6; });
+    doc.setTextColor(...NOIR);
+  }
+
   // ----- Pied de page sur toutes les pages -----
   const nbPages = doc.getNumberOfPages();
   for(let p = 1; p <= nbPages; p++){
@@ -1499,7 +1743,7 @@ function projetActif(p){ return !!p && (p.statut_projet||"Actif") === "Actif"; }
 function peutModifierStatutProjet(p){
   if(!p) return false;
   if(estAdmin()) return true;
-  return !!(state.user && state.user.role === "Gestionnaire") && p.statut_projet !== "Terminé";
+  return !!(state.user && niveauRole(state.user.role) === "Gestionnaire") && p.statut_projet !== "Terminé";
 }
 
 async function modifierStatutProjet(nouveauStatut){
@@ -1527,7 +1771,8 @@ async function supprimerProjet(){
   if(!p) return;
   if(!estAdmin()){ showToast("Seul un administrateur peut supprimer un projet."); return; }
   if(p.statut_projet !== "Terminé"){ showToast("Seul un projet terminé peut être supprimé."); return; }
-  const nbRapports = state.rapports.filter(r=>String(r.projet_id)===String(p.id)).length;
+  const cpt = await sbSelectCount("Rapports", `select=id&projet_id=eq.${encodeURIComponent(p.id)}&limit=1`);
+  const nbRapports = cpt ? cpt.total : "plusieurs";
   const saisie = prompt(`SUPPRESSION DÉFINITIVE\n\nLe projet « ${p.nom_projet} » sera supprimé avec ses ${nbRapports} rapport(s), ses saisies terrain et ses destinataires. Cette action est irréversible.\n\nPour confirmer, tape le nom exact du projet:`);
   if(saisie === null) return;
   if(saisie.trim() !== (p.nom_projet||"").trim()){ showToast("Le nom saisi ne correspond pas. Suppression annulée."); return; }
@@ -1562,6 +1807,205 @@ async function supprimerProjet(){
   }
 }
 
+/* ================= LISTE DES RAPPORTS (recherche, filtres, pages) ================= */
+function filtresListeActifs(L){ return !!(L.q.trim() || L.statut || L.auteur || L.periode); }
+function nettoyerRecherche(q){ return q.replace(/[,()*%\\:"]/g, " ").replace(/\s+/g, " ").trim(); }
+function dateDepuisPeriode(p){
+  const d = new Date();
+  if(p === "30j") d.setDate(d.getDate() - 30);
+  else if(p === "3m") d.setMonth(d.getMonth() - 3);
+  else if(p === "an") return `${d.getFullYear()}-01-01`;
+  else return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function requeteFiltresListe(L){
+  const parts = [];
+  if(L.statut) parts.push(`statut_rapport=eq.${encodeURIComponent(L.statut)}`);
+  if(L.auteur) parts.push(`utilisateur_id=eq.${encodeURIComponent(L.auteur)}`);
+  const dep = dateDepuisPeriode(L.periode);
+  if(dep) parts.push(`date_rapport=gte.${dep}`);
+  const q = nettoyerRecherche(L.q);
+  if(q) parts.push(`or=${encodeURIComponent(`(titre.ilike.*${q}*,description.ilike.*${q}*,contenu_ia.ilike.*${q}*)`)}`);
+  return parts.join("&");
+}
+
+async function chargerListeRapports(reset){
+  const L = state.liste;
+  if(L.projetId !== state.currentProjetId){
+    Object.assign(L, { projetId: state.currentProjetId, q:"", statut:"", auteur:"", periode:"", items:[], aTraiter:[], total:0, erreur:null, photos:{}, replies:{} });
+    reset = true;
+  }
+  const jeton = ++L.jeton;
+  if(reset){ L.items = []; L.aTraiter = []; L.total = 0; }
+  L.chargement = true; L.erreur = null;
+  majListeResultats();
+  if(!(state.membres || []).length) await chargerMembres();
+  if(jeton !== L.jeton) return;
+  const base = `projet_id=eq.${encodeURIComponent(L.projetId)}`;
+  const filtres = requeteFiltresListe(L);
+  const sansFiltre = !filtresListeActifs(L);
+
+  if(reset && sansFiltre){
+    const ors = [];
+    if(state.user && state.user.id) ors.push(`and(statut_rapport.eq.Brouillon,utilisateur_id.eq.${state.user.id})`);
+    if(peutApprouver()) ors.push("statut_rapport.eq.À approuver");
+    if(ors.length){
+      const t = await sbSelect("Rapports", `select=${COLS_RAPPORT_LISTE}&${base}&or=${encodeURIComponent("(" + ors.join(",") + ")")}&order=date_rapport.desc,id.desc&limit=50`);
+      if(jeton !== L.jeton) return;
+      if(t){ L.aTraiter = t; fusionnerRapports(t); }
+    }
+  }
+  const exclure = (sansFiltre && L.aTraiter.length) ? `&id=not.in.(${L.aTraiter.map(x => encodeURIComponent(x.id)).join(",")})` : "";
+  const res = await sbSelectCount("Rapports", `select=${COLS_RAPPORT_LISTE}&${base}${filtres ? "&" + filtres : ""}${exclure}&order=date_rapport.desc,id.desc&limit=${L.taille}&offset=${L.items.length}`);
+  if(jeton !== L.jeton) return;
+  L.chargement = false;
+  if(!res){ L.erreur = messageErreurDb(); majListeResultats(); return; }
+  L.items = L.items.concat(res.rows);
+  L.total = res.total;
+  fusionnerRapports(res.rows);
+  majListeResultats();
+  // Nombre de photos par rapport (facultatif)
+  const ids = res.rows.concat(reset ? L.aTraiter : []).map(r => encodeURIComponent(r.id));
+  if(ids.length){
+    const ph = await sbSelect("Rapport_photos", `select=rapport_id&rapport_id=in.(${ids.join(",")})`);
+    if(jeton !== L.jeton || !ph) return;
+    const cpt = {};
+    ph.forEach(p => { cpt[p.rapport_id] = (cpt[p.rapport_id] || 0) + 1; });
+    Object.keys(cpt).forEach(k => { L.photos[k] = cpt[k]; });
+    majListeResultats();
+  }
+}
+
+let minuterieRecherche = null;
+function filtrerListeRapports(cle, valeur){
+  state.liste[cle] = valeur;
+  clearTimeout(minuterieRecherche);
+  if(cle === "q") minuterieRecherche = setTimeout(() => chargerListeRapports(true), 350);
+  else chargerListeRapports(true);
+}
+function basculerMois(cle){ state.liste.replies[cle] = !state.liste.replies[cle]; majListeResultats(); }
+
+function libelleMois(dateIso){
+  const m = /^(\d{4})-(\d{2})/.exec(String(dateIso || ""));
+  if(!m) return { cle: "sans-date", libelle: "Sans date" };
+  const t = new Date(Number(m[1]), Number(m[2]) - 1, 1).toLocaleDateString("fr-CA", { month: "long", year: "numeric" });
+  return { cle: `${m[1]}-${m[2]}`, libelle: t.charAt(0).toUpperCase() + t.slice(1) };
+}
+
+function htmlLigneRapport(r, nbPhotos, afficherProjet){
+  const proj = afficherProjet ? state.projets.find(p => String(p.id) === String(r.projet_id)) : null;
+  const couleur = { "Approuvé": "var(--green)", "À approuver": "var(--suspendu)", "Brouillon": "#9AA3A8" }[r.statut_rapport] || "#9AA3A8";
+  const meta = [
+    proj ? escapeHtml(proj.nom_projet) : "",
+    r.date_rapport ? formatDateRapport(r.date_rapport) : "Date non disponible",
+    escapeHtml(nomMembre(r.utilisateur_id)),
+    nbPhotos ? `${CAM_SVG} ${nbPhotos}` : ""
+  ].filter(Boolean).join(" · ");
+  const num = numeroRapport(r);
+  return `
+    <div class="carte-rapport" style="border-left-color:${couleur};" onclick="ouvrirRapport('${r.id}')">
+      <div class="cr-top">
+        <div class="cr-titre">${num ? `<span class="cr-num">${num}</span>` : ""}${escapeHtml(r.titre || "Sans titre")}</div>
+        <span class="status ${classeStatutRapport(r.statut_rapport)}" style="flex:none;">${escapeHtml(r.statut_rapport || "Aucun statut")}</span>
+      </div>
+      <div class="cr-meta">${meta}</div>
+      ${(r.statut_rapport === "Brouillon" && r.commentaire_revision) ? `<div style="font-size:11.5px;margin-top:6px;color:#7A5B00;">Renvoyé: ${escapeHtml(r.commentaire_revision)}</div>` : ""}
+    </div>`;
+}
+
+function htmlResultatsListe(){
+  const L = state.liste;
+  if(L.erreur) return `<div class="card" style="border-left:4px solid var(--refuse);font-size:13px;">⚠ Impossible de charger les rapports (${escapeHtml(L.erreur)}).<button class="btn btn-outline" style="margin-top:8px;" onclick="chargerListeRapports(true)">Réessayer</button></div>`;
+  if(L.chargement && !L.items.length && !L.aTraiter.length) return `<p class="muted center"><span class="spinner"></span>Chargement...</p>`;
+  let html = "";
+  const actifs = filtresListeActifs(L);
+  if(L.aTraiter.length){
+    html += `<div style="font-weight:700;color:#7A5B00;margin:10px 0 2px;">À traiter (${L.aTraiter.length})</div>` + L.aTraiter.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
+  }
+  const nbTotal = L.total + L.aTraiter.length;
+  html += `<div class="muted" style="font-size:12px;margin:12px 0 2px;">${nbTotal} rapport${nbTotal > 1 ? "s" : ""}${actifs ? " (filtres actifs)" : ""}</div>`;
+  if(!L.items.length && !L.aTraiter.length){
+    return html + `<p class="muted center">${actifs ? "Aucun rapport ne correspond à ta recherche." : "Aucun rapport pour ce projet encore."}</p>`;
+  }
+  const groupes = [];
+  L.items.forEach(r => {
+    const g = libelleMois(r.date_rapport);
+    let groupe = groupes.find(x => x.cle === g.cle);
+    if(!groupe){ groupe = { ...g, rapports: [] }; groupes.push(groupe); }
+    groupe.rapports.push(r);
+  });
+  groupes.forEach(g => {
+    const ferme = !!L.replies[g.cle];
+    html += `<div onclick="basculerMois('${g.cle}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-top:14px;padding:6px 0;border-bottom:2px solid var(--border);"><span>${escapeHtml(g.libelle)} <span class="muted" style="font-weight:400;">(${g.rapports.length})</span></span><span>${ferme ? "▸" : "▾"}</span></div>`;
+    if(!ferme) html += g.rapports.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
+  });
+  if(L.items.length < L.total){
+    html += `<button class="btn btn-outline" style="margin-top:12px;" ${L.chargement ? "disabled" : ""} onclick="chargerListeRapports(false)">${L.chargement ? "Chargement..." : `Voir plus (${L.total - L.items.length} restant${L.total - L.items.length > 1 ? "s" : ""})`}</button>`;
+  }
+  return html;
+}
+function majListeResultats(){
+  const el = document.getElementById("liste-resultats");
+  if(el) el.innerHTML = htmlResultatsListe();
+}
+
+/* ================= RÉSUMÉ DE PROJET ================= */
+async function chargerResumeProjet(){
+  const pid = state.currentProjetId;
+  if(!pid || String(pid).startsWith("local-")) return;
+  const base = `projet_id=eq.${encodeURIComponent(pid)}`;
+  const [tot, att, appr, rec] = await Promise.all([
+    sbSelectCount("Rapports", `select=id&${base}&limit=1`),
+    sbSelectCount("Rapports", `select=id&${base}&statut_rapport=eq.${encodeURIComponent("À approuver")}&limit=1`),
+    sbSelect("Rapports", `select=${COLS_RAPPORT_LISTE}&${base}&statut_rapport=eq.Approuv%C3%A9&order=date_rapport.desc,id.desc&limit=1`),
+    sbSelect("Rapports", `select=${COLS_RAPPORT_LISTE}&${base}&order=date_rapport.desc,id.desc&limit=5`)
+  ]);
+  if(String(state.currentProjetId) !== String(pid)) return;
+  state.resumeProjet = { projetId: pid, ok: !!(tot && att && rec), total: tot ? tot.total : 0, aApprouver: att ? att.total : 0, dernierApprouve: (appr && appr[0]) || null, recents: rec || [] };
+  fusionnerRapports(rec || []);
+  if(!(state.membres || []).length) await chargerMembres();
+  majResumeProjet();
+}
+function htmlResumeProjet(){
+  const R = state.resumeProjet;
+  if(!R || String(R.projetId) !== String(state.currentProjetId)) return `<p class="muted center"><span class="spinner"></span>Chargement du résumé...</p>`;
+  if(!R.ok) return `<p class="muted center">Résumé indisponible.</p>`;
+  const stats = `<div class="card" style="font-size:13px;line-height:1.7;">
+    <div><strong>${R.total}</strong> rapport${R.total > 1 ? "s" : ""} au total</div>
+    <div><strong>${R.aApprouver}</strong> en attente d'approbation</div>
+    <div>Dernier rapport approuvé : ${R.dernierApprouve && R.dernierApprouve.date_rapport ? formatDateRapport(R.dernierApprouve.date_rapport) : "aucun"}</div>
+  </div>`;
+  const rec = R.recents.length ? `<div style="font-weight:700;margin:10px 0 2px;">Derniers rapports</div>` + R.recents.map(r => htmlLigneRapport(r)).join("") : "";
+  return stats + rec;
+}
+function majResumeProjet(){
+  const el = document.getElementById("resume-projet");
+  if(el) el.innerHTML = htmlResumeProjet();
+}
+
+/* ================= LISTE DES PROJETS (recherche, filtre) ================= */
+function htmlListeProjets(){
+  const F = state.filtreProjets;
+  const q = F.q.trim().toLowerCase();
+  const ordre = { "Actif": 0, "Suspendu": 1, "Terminé": 2 };
+  const liste = state.projets
+    .filter(p => (!F.statut || (p.statut_projet || "Actif") === F.statut))
+    .filter(p => !q || ((p.nom_projet || "") + " " + (p.adresse_projet || "")).toLowerCase().includes(q))
+    .sort((a, b) => ((ordre[a.statut_projet || "Actif"] ?? 3) - (ordre[b.statut_projet || "Actif"] ?? 3)) || (a.nom_projet || "").localeCompare(b.nom_projet || "", "fr"));
+  if(!state.projets.length) return `<p class="muted center">Aucun projet encore. Crée ton premier projet pour commencer.</p>`;
+  if(!liste.length) return `<p class="muted center">Aucun projet ne correspond.</p>`;
+  return liste.map(p => `
+    <div class="project-item" onclick="ouvrirProjet('${p.id}')">
+      <div><div class="name">${escapeHtml(p.nom_projet || "Sans titre")}</div><div class="addr">${escapeHtml(p.adresse_projet || "")}</div></div>
+      <span class="status ${p.statut_projet || 'Actif'}">${p.statut_projet || 'Actif'}</span>
+    </div>`).join("");
+}
+function filtrerProjets(cle, valeur){
+  state.filtreProjets[cle] = valeur;
+  const el = document.getElementById("liste-projets");
+  if(el) el.innerHTML = htmlListeProjets();
+}
+
 /* ================= RENDU ================= */
 function render(){
   const app = document.getElementById("app");
@@ -1569,6 +2013,7 @@ function render(){
   app.innerHTML = "";
   const el = document.createElement("div");
 
+  try{
   if(state.view==="accueil") el.innerHTML = renderAccueil();
   else if(state.view==="mesProjets") el.innerHTML = renderMesProjets();
   else if(state.view==="ajouterProjet") el.innerHTML = renderAjouterProjet();
@@ -1586,6 +2031,10 @@ function render(){
   else if(state.view==="onboardingEtape1") el.innerHTML = renderOnboarding1();
   else if(state.view==="onboardingEtape2") el.innerHTML = renderOnboarding2();
   else if(state.view==="accepterInvitation") el.innerHTML = renderAccepterInvitation();
+  }catch(err){
+    console.error("Erreur d'affichage", state.view, err);
+    el.innerHTML = `<main style="padding:20px;"><div class="card"><h3 style="margin-top:0;">Erreur d'affichage</h3><p class="muted">L'écran « ${escapeHtml(state.view)} » n'a pas pu s'afficher : ${escapeHtml(err && err.message || err)}</p><button class="btn btn-primary" onclick="go('mesProjets')">Retour à mes projets</button></div></main>`;
+  }
 
   app.appendChild(el);
 
@@ -1675,11 +2124,12 @@ function renderAccueil(){
 }
 
 function renderMesProjets(){
-  const items = state.projets.map(p=>`
-    <div class="project-item" onclick="ouvrirProjet('${p.id}')">
-      <div><div class="name">${p.nom_projet||"Sans titre"}</div><div class="addr">${p.adresse_projet||""}</div></div>
-      <span class="status ${p.statut_projet||'Actif'}">${p.statut_projet||'Actif'}</span>
-    </div>`).join("") || `<p class="muted center">Aucun projet encore. Crée ton premier projet pour commencer.</p>`;
+  const F = state.filtreProjets;
+  const filtres = state.projets.length > 5 ? `
+    <input type="text" id="filtre-projets" placeholder="Rechercher un projet (nom ou adresse)" value="${escapeHtml(F.q)}" oninput="filtrerProjets('q', this.value)">
+    <select onchange="filtrerProjets('statut', this.value)" aria-label="Filtrer par statut" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin:6px 0 10px;font-size:13px;">
+      ${[["", "Tous les statuts"], ["Actif", "Actifs"], ["Suspendu", "Suspendus"], ["Terminé", "Terminés"]].map(([v, l]) => `<option value="${v}"${F.statut === v ? " selected" : ""}>${l}</option>`).join("")}
+    </select>` : "";
   return `
   ${header("Mes projets", null, "ouvrirMenuProfil()")}
   <main>
@@ -1689,28 +2139,35 @@ function renderMesProjets(){
       const n = state.rapports.filter(r=>r.statut_rapport==="À approuver").length;
       return n ? `<div class="card" style="border-left:4px solid var(--suspendu);display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:13.5px;font-weight:600;">${n} rapport${n>1?"s":""} à approuver</div><button class="btn btn-warning" style="width:auto;margin:0;padding:8px 14px;" onclick="ouvrirRapportsAApprouver()">Voir</button></div>` : "";
     })()}
-    <div class="card">${items}</div>
+    <div class="card">${filtres}<div id="liste-projets">${htmlListeProjets()}</div></div>
     <button class="btn btn-primary" onclick="go('ajouterProjet')">+ Nouveau projet</button>
   </main>`;
 }
-
+function libelleTypeProjet(t){
+  const k = ["nom_type_projet","nom_type","type_projet","libelle","nom","label","name"].find(c=>t[c]);
+  if(k) return String(t[k]);
+  const k2 = Object.keys(t).find(c=>c!=="id" && typeof t[c]==="string" && !/^(created|date|cree)/i.test(c));
+  return k2 ? String(t[k2]) : ("Type " + t.id);
+}
 function renderAjouterProjet(){
-  const options = state.typesProjets.length
-    ? state.typesProjets.map(t=>`<option value="${t.id}">${t.nom_categorie}</option>`).join("")
-    : `<option value="">(aucun type défini dans Types_projets)</option>`;
+  const types = (state.typesProjets||[]).map(t=>`<option value="${escapeHtml(t.id)}">${escapeHtml(libelleTypeProjet(t))}</option>`).join("");
   return `
   ${header("Nouveau projet","go('mesProjets')")}
   <main>
-    <label>Nom du projet *</label><input type="text" id="np-nom" placeholder="Ex: Construction école primaire">
-    <label>Adresse du projet *</label><input type="text" id="np-adresse" placeholder="Ex: 123 rue Principale, M...">
-    <label>Type de projet *</label>
-    <select id="np-type">${options}</select>
-    <label>Description</label><textarea id="np-desc" placeholder="Détails supplémentaires..."></textarea>
+    <div class="card">
+      <label>Nom du projet *</label>
+      <input type="text" id="np-nom" placeholder="ex: Rénovation école Saint-Joseph">
+      <label>Adresse *</label>
+      <input type="text" id="np-adresse" placeholder="ex: 123 rue Principale, Montréal">
+      <label>Type de projet</label>
+      <select id="np-type"><option value="">Non précisé</option>${types}</select>
+      <label>Description (optionnel)</label>
+      <textarea id="np-desc" rows="3" placeholder="Description du projet"></textarea>
+    </div>
     <button class="btn btn-primary" id="btn-creer-projet">Créer le projet</button>
-    <p class="muted" style="margin-top:8px;">* Champs obligatoires</p>
+    <button class="btn btn-grey" onclick="go('mesProjets')">Annuler</button>
   </main>`;
 }
-
 function renderDetailProjet(){
   const p = state.projets.find(p=>String(p.id)===String(state.currentProjetId)) || {};
   return `
@@ -1725,25 +2182,30 @@ function renderDetailProjet(){
       ? `<button class="btn btn-primary" onclick="resetRapportForm();go('creerRapport')">Créer un rapport</button>`
       : `<p class="muted center">Projet ${escapeHtml(p.statut_projet||"")}: la création de rapports est désactivée.</p>`}
     ${peutModifierStatutProjet(p) ? `<button class="btn btn-warning" onclick="state.modal='modifierStatut';render()">Modifier le statut</button>` : ``}
-    <button class="btn btn-outline" onclick="ouvrirListeRapports()">Voir les rapports</button>
+    <div id="resume-projet">${htmlResumeProjet()}</div>
+    <button class="btn btn-outline" onclick="ouvrirListeRapports()">Voir tous les rapports</button>
     ${(estAdmin() && p.statut_projet === "Terminé") ? `<button class="btn btn-danger" style="margin-top:16px;" onclick="supprimerProjet()">Supprimer le projet</button>` : ``}
   </main>`;
 }
 
 function renderListeRapports(){
-  const list = state.rapports.filter(r=>String(r.projet_id)===String(state.currentProjetId));
-  const items = list.map(r=>`
-    <div class="list-item" style="cursor:pointer;" onclick="ouvrirRapport('${r.id}')">
-      <div class="t">${escapeHtml(r.titre||"Sans titre")}</div>
-      <div class="d">${r.date_rapport ? formatDateRapport(r.date_rapport) : "Date non disponible"}</div>
-      <span class="status ${classeStatutRapport(r.statut_rapport)}">${escapeHtml(r.statut_rapport||"Aucun statut")}</span>
-      ${(r.statut_rapport==="Brouillon" && r.commentaire_revision) ? `<div class="muted" style="font-size:11.5px;margin-top:4px;color:#7A5B00;">Renvoyé: ${escapeHtml(r.commentaire_revision)}</div>` : ""}
-    </div>`).join("") || `<p class="muted center">Aucun rapport pour ce projet encore.</p>`;
+  const L = state.liste;
+  const nouveau = L.projetId !== state.currentProjetId;
+  const q = nouveau ? "" : L.q, st = nouveau ? "" : L.statut, au = nouveau ? "" : L.auteur, pe = nouveau ? "" : L.periode;
+  const sel = (action, label, options, val) => `<select onchange="${action}" aria-label="${label}" style="flex:1;min-width:0;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;">${options.map(([v, l]) => `<option value="${escapeHtml(v)}"${String(val) === String(v) ? " selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select>`;
+  const membres = (state.membres || []).map(m => [String(m.id), m.nom || m.email]);
   return `
   ${header("Rapports","go('detailProjet')")}
-  <main>${items}</main>`;
+  <main>
+    <input type="text" id="liste-q" placeholder="Rechercher (titre ou contenu)" value="${escapeHtml(q)}" oninput="filtrerListeRapports('q', this.value)">
+    <div style="display:flex;gap:6px;margin:6px 0;">
+      ${sel("filtrerListeRapports('statut', this.value)", "Statut", [["", "Tous les statuts"], ["Brouillon", "Brouillon"], ["À approuver", "À approuver"], ["Approuvé", "Approuvé"]], st)}
+      ${sel("filtrerListeRapports('periode', this.value)", "Période", [["", "Toute période"], ["30j", "30 derniers jours"], ["3m", "3 derniers mois"], ["an", "Cette année"]], pe)}
+    </div>
+    ${membres.length > 1 ? `<div style="display:flex;gap:6px;margin-bottom:6px;">${sel("filtrerListeRapports('auteur', this.value)", "Auteur", [["", "Tous les auteurs"], ...membres], au)}</div>` : ""}
+    <div id="liste-resultats">${nouveau ? `<p class="muted center"><span class="spinner"></span>Chargement...</p>` : htmlResultatsListe()}</div>
+  </main>`;
 }
-
 function renderRapportsAApprouver(){
   const list = state.rapports.filter(r=>r.statut_rapport==="À approuver");
   const items = list.map(r=>{
@@ -1781,92 +2243,128 @@ function renderRevueRapport(){
 
 function renderGestionEntreprise(){
   const e = state.entreprise;
+  const nbMembres = (state.membres||[]).filter(m=>m.actif!==false).length;
+  const roleDefaut = (e.roles||[]).includes("Employé") ? "Employé" : ((e.roles||[])[0] || "");
+  const avatar = e.logoBase64
+    ? `<img src="data:${e.logoMimeType};base64,${e.logoBase64}" alt="Logo">`
+    : escapeHtml(initialesEntreprise(e.nom_entreprise));
   return `
   ${header("Mon entreprise","go('mesProjets')")}
   <main>
-    <div class="muted" style="margin-bottom:10px;">Informations de l'entreprise</div>
-    ${e.logoBase64 ? `<div class="center"><img src="data:${e.logoMimeType};base64,${e.logoBase64}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;"></div>` : ""}
-    <label>Nom de l'entreprise</label>
-    <div class="field-icon"><span class="ic">🏢</span><input type="text" id="ge-nom" value="${e.nom_entreprise||""}"></div>
-    <label>Numéro RBQ</label>
-    <div class="field-icon"><span class="ic">🪪</span><input type="text" id="ge-rbq" value="${e.numero_rbq||""}"></div>
-    <label>Adresse</label>
-    <div class="field-icon"><span class="ic">📍</span><input type="text" id="ge-adresse" value="${e.adresse_siege||""}"></div>
-    <label>Email</label>
-    <div class="field-icon"><span class="ic">✉️</span><input type="text" id="ge-email" value="${e.email_facturation||""}"></div>
-    <label>Contact d'urgence</label>
-    <div class="field-icon"><span class="ic">📞</span><input type="text" id="ge-urgence" value="${e.contact_urgence||""}"></div>
-    <button class="btn btn-primary" id="btn-enregistrer-entreprise">Enregistrer les modifications</button>
+    <div class="ent-hero">
+      <div class="ent-avatar">${avatar}</div>
+      <div style="min-width:0;">
+        <div class="ent-nom">${escapeHtml(e.nom_entreprise||"Mon entreprise")}</div>
+        <div class="ent-meta">
+          ${e.numero_rbq ? `<span class="ent-pill">RBQ ${escapeHtml(e.numero_rbq)}</span>` : ``}
+          <span class="ent-pill">${nbMembres} membre${nbMembres>1?"s":""}</span>
+        </div>
+      </div>
+    </div>
 
-    <div class="muted" style="margin:16px 0 6px;">Approbation des rapports</div>
+    <div class="sec-titre">Identité</div>
+    <div class="card-pro">
+      <label>Nom de l'entreprise</label>
+      ${champIcone("immeuble","ge-nom",e.nom_entreprise,{placeholder:"Nom légal ou commercial"})}
+      <label>Numéro de licence RBQ</label>
+      ${champIcone("licence","ge-rbq",e.numero_rbq,{placeholder:"0000-0000-00",aide:"Format habituel : 10 chiffres, ex. 5600-1234-01"})}
+    </div>
+
+    <div class="sec-titre">Coordonnées</div>
+    <div class="card-pro">
+      <label>Adresse du siège</label>
+      ${champIcone("lieu","ge-adresse",e.adresse_siege,{placeholder:"Numéro, rue, ville"})}
+      <label>Courriel de facturation</label>
+      ${champIcone("courriel","ge-email",e.email_facturation,{type:"email",placeholder:"contact@entreprise.com",aide:"Utilisé comme adresse de l'entreprise"})}
+    </div>
+
+    <div class="sec-titre">Sécurité</div>
+    <div class="card-pro">
+      <label>Contact d'urgence</label>
+      ${champIcone("telephone","ge-urgence",e.contact_urgence,{type:"tel",placeholder:"514 555-0123",inputmode:"tel",aide:"Personne à joindre en cas d'incident sur un chantier"})}
+    </div>
+    <button class="btn btn-primary" id="btn-enregistrer-entreprise" disabled>Enregistrer les modifications</button>
+
+    <div class="sec-titre">Approbation des rapports</div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div>
           <div style="font-size:13.5px;">Exiger l'approbation</div>
           <div class="muted" style="font-size:11.5px;margin-top:2px;">Les rapports des employés doivent être approuvés par un gestionnaire ou un administrateur avant l'envoi au client.</div>
         </div>
-        <input type="checkbox" ${e.approbation_requise?'checked':''} onchange="basculerApprobation(this.checked)" style="width:20px;height:20px;flex:none;">
+        <label class="interrupteur" style="margin:0;"><input type="checkbox" ${e.approbation_requise?'checked':''} onchange="basculerApprobation(this.checked)" aria-label="Exiger l'approbation"><span class="piste"></span></label>
       </div>
     </div>
 
-    <div class="muted" style="margin:16px 0 6px;">Rôles de l'entreprise</div>
-    <div class="card">
-      ${(e.roles||[]).map(r=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
-          <span>${r}</span>
-          <button onclick="retirerRole('${r}')" style="background:none;border:none;color:var(--refuse);font-size:14px;cursor:pointer;">Retirer</button>
-        </div>`).join("") || `<p class="muted">Aucun rôle défini.</p>`}
-      <div class="row" style="margin-top:10px;">
-        <input type="text" id="nouveau-role" placeholder="Ex: Contremaître">
-        <button class="btn btn-outline" style="margin-top:0;width:auto;padding:10px 14px;" onclick="ajouterRole()">+ Ajouter</button>
-      </div>
-    </div>
-
-    <div class="muted" style="margin:16px 0 6px;">Membres de l'équipe</div>
-    <div class="card">
+    <div class="sec-titre">Membres de l'équipe (${nbMembres})</div>
+    <div class="card-pro" style="padding-top:4px;">
       ${(state.membres||[]).map(m=>{
         const moi = !!(state.authUser && m.auth_id === state.authUser.id);
         const inactif = m.actif === false;
-        const rolesDispo = [...new Set([...(e.roles||[]), m.role].filter(Boolean))];
-        const dernierAdmin = m.role === "Administrateur" && !inactif && nbAdminsActifs() <= 1;
+        const libelle = m.nom ? nomAffiche(m.nom) : m.email;
         return `
-        <div style="padding:8px 0;border-bottom:1px solid var(--border);${inactif?'opacity:.55;':''}">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-            <div style="min-width:0;">
-              <div style="font-size:13.5px;">${escapeHtml(m.nom||m.email)}${moi?' <span class="muted">(vous)</span>':''}</div>
-              <div class="muted" style="font-size:11.5px;">${escapeHtml(m.email)}</div>
-            </div>
-            ${inactif ? `<span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#EEE;color:#555;">Désactivé</span>` : ``}
+        <div class="ligne-pro" style="${inactif?'opacity:.55;':''}">
+          <div class="avatar-m" style="background:${couleurRole(m.role)};">${escapeHtml(initialesEntreprise(m.nom||m.email))}</div>
+          <div style="min-width:0;flex:1;">
+            <div class="nom-m">${escapeHtml(libelle)}${moi?' <span class="muted">(vous)</span>':''}</div>
+            ${m.nom ? `<div class="muted" style="font-size:12px;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.email||"")}</div>` : ``}
+            <div style="margin-top:5px;"><span class="pastille ${inactif?'off':'role'}">${inactif?'Désactivé':escapeHtml(m.role||"Sans rôle")}</span></div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px;">
-            ${inactif
-              ? `<span class="muted" style="font-size:12px;">${escapeHtml(m.role||"")}</span>`
-              : `<select onchange="changerRoleMembre('${m.id}', this.value)" ${(moi||dernierAdmin)?'disabled':''} style="width:auto;padding:6px 8px;font-size:12.5px;">${rolesDispo.map(r=>`<option ${r===m.role?'selected':''}>${escapeHtml(r)}</option>`).join("")}</select>`}
-            ${moi ? `` : (inactif
-              ? `<button onclick="changerStatutMembre('${m.id}', true)" style="background:none;border:none;color:var(--green);font-size:12.5px;cursor:pointer;">Réactiver</button>`
-              : `<button onclick="changerStatutMembre('${m.id}', false)" style="background:none;border:none;color:var(--refuse);font-size:12.5px;cursor:pointer;">Retirer</button>`)}
-          </div>
+          ${moi ? `` : `<button class="btn-menu" aria-label="Actions" onclick="ouvrirMenuMembre('${m.id}')">⋯</button>`}
         </div>`;
-      }).join("") || `<p class="muted">Aucun membre pour l'instant.</p>`}
+      }).join("") || `<div class="vide-pro">Invitez votre premier collaborateur ci-dessous.</div>`}
     </div>
 
-    <label style="margin-top:16px;">Courriel du membre à inviter</label><input type="email" id="ge-invite-email" placeholder="Ex: jean.tremblay@const...">
-    <label>Rôle du membre</label>
-    <select id="ge-invite-role">${(e.roles||[]).map(r=>`<option>${r}</option>`).join("")}</select>
-    <button class="btn btn-primary" id="ge-invite-btn" onclick="inviterMembre()">Inviter un membre</button>
+    <div class="sec-titre">Inviter un membre</div>
+    <div class="card-pro">
+      <label>Courriel du collaborateur</label>
+      <div class="field-icon"><span class="ic">${ICONES.courriel}</span><input type="email" id="ge-invite-email" placeholder="prenom.nom@entreprise.com" autocomplete="off"></div>
+      <label>Rôle</label>
+      <input type="hidden" id="ge-invite-role" value="${escapeHtml(roleDefaut)}">
+      <div class="puces" id="ge-invite-puces">
+        ${(e.roles||[]).map((r,i,arr)=>`<button type="button" class="puce${r===roleDefaut?' actif':''}" onclick="choisirRoleInvitation(this)" data-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join("")}
+      </div>
+      <div class="aide-champ" id="ge-invite-aide">${escapeHtml(descriptionRole(roleDefaut))}</div>
+      <button class="btn btn-primary" id="ge-invite-btn" onclick="inviterMembre()" style="margin-top:14px;">Envoyer l'invitation</button>
+    </div>
 
     ${state.invitations && state.invitations.length ? `
-    <div class="muted" style="margin:16px 0 6px;">Invitations en attente</div>
-    <div class="card">
+    <div class="sec-titre">Invitations en attente (${state.invitations.length})</div>
+    <div class="card-pro" style="padding-top:4px;">
       ${state.invitations.map(inv=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
-          <div><div style="font-size:13.5px;">${escapeHtml(inv.email)}</div><div class="muted" style="font-size:11.5px;">${escapeHtml(inv.role)}</div></div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#FFF3CD;color:#7A5B00;">En attente</span>
-            <button onclick="annulerInvitation(${inv.id})" style="background:none;border:none;color:var(--refuse);font-size:12px;cursor:pointer;">Annuler</button>
-          </div>
+        <div class="ligne-pro">
+          <div class="avatar-m" style="background:#B0BEC5;">${escapeHtml(initialesEntreprise(inv.email))}</div>
+          <div style="min-width:0;flex:1;"><div class="nom-m" style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(inv.email)}</div><div style="margin-top:5px;"><span class="pastille attente">En attente</span> <span class="muted" style="font-size:12px;">${escapeHtml(inv.role)}</span></div></div>
+          <button class="btn-menu" aria-label="Annuler l'invitation" title="Annuler l'invitation" onclick="annulerInvitation(${inv.id})">✕</button>
         </div>`).join("")}
     </div>` : ""}
+
+    <div class="sec-titre">Rôles de l'entreprise</div>
+    <div class="card-pro" style="padding-top:4px;">
+      ${(e.roles||[]).map(r=>`
+        <div class="ligne-pro">
+          <div style="min-width:0;flex:1;">
+            <span class="pastille role">${escapeHtml(r)}</span>
+            ${ROLES_BASE.includes(r) ? `` : `<span class="pastille attente" style="margin-left:4px;">Accès ${escapeHtml(niveauRole(r))}</span>`}
+            <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(descriptionRole(r))}</div>
+          </div>
+          ${ROLES_BASE.includes(r) ? `<span class="muted" style="font-size:11px;">Rôle de base</span>` : `<button class="btn-menu" aria-label="Supprimer le rôle" title="Supprimer le rôle" onclick="retirerRole(decodeURIComponent('${encodeURIComponent(r)}'))">${ICONE_CORBEILLE}</button>`}
+        </div>`).join("") || `<div class="vide-pro">Aucun rôle défini.</div>`}
+    </div>
+
+    <div class="sec-titre">Créer un rôle personnalisé</div>
+    <div class="card-pro">
+      <label>Titre du rôle</label>
+      <input type="text" id="nouveau-role" placeholder="Ex. Chargé de projet" style="margin-top:6px;">
+      <label>Niveau d'accès</label>
+      <div class="puces" id="nr-niveaux">
+        <button type="button" class="puce${(state.niveauNouveauRole||"Employé")==="Employé"?" actif":""}" data-niveau="Employé" onclick="choisirNiveauNouveauRole(this)">Comme un Employé</button>
+        <button type="button" class="puce${state.niveauNouveauRole==="Gestionnaire"?" actif":""}" data-niveau="Gestionnaire" onclick="choisirNiveauNouveauRole(this)">Comme un Gestionnaire</button>
+      </div>
+      <div class="aide-champ" id="nr-aide">${state.niveauNouveauRole==="Gestionnaire" ? "Peut approuver les rapports et gérer le statut des projets." : "Crée des rapports, soumis à approbation. Aucun droit de gestion."}</div>
+      <div class="aide-champ">Seul le rôle Administrateur donne un accès total.</div>
+      <button class="btn btn-outline" style="margin-top:12px;" onclick="ajouterRole()">+ Créer le rôle</button>
+    </div>
 
     <button class="btn btn-danger" style="margin-top:16px;" onclick="seDeconnecter()">Se déconnecter</button>
   </main>`;
@@ -1896,19 +2394,33 @@ function renderCreerRapport(){
     <label>Titre *</label><input type="text" id="rf-titre" value="${escapeHtml(f.titre)}" placeholder="Titre du rapport">
     <label>Description des travaux</label>
     <div class="field-with-mic">
-      <textarea id="rf-description" placeholder="Description des travaux">${escapeHtml(f.description)}</textarea>
-      <button type="button" class="mic-btn ${recordingField==='description'?'recording':''}" onclick="toggleMic('description', this)">🎤</button>
+      <textarea id="rf-description" placeholder="Description des travaux" style="min-height:100px;">${escapeHtml(f.description)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='description'?'recording':''}" onclick="toggleMic('description', this)" aria-label="Dicter">${MIC_SVG}</button>
     </div>
-    <div class="row">
-      <div><label>Observations</label><input type="text" id="rf-observations" value="${escapeHtml(f.observations)}"></div>
-      <div><label>Visiteurs</label><input type="text" id="rf-visiteurs" value="${escapeHtml(f.visiteurs)}"></div>
-      <div><label>EPI</label><input type="text" id="rf-epi" value="${escapeHtml(f.epi)}"></div>
+    <label>Observations</label>
+    <div class="field-with-mic">
+      <textarea id="rf-observations" placeholder="Retards, anomalies, état du chantier..." style="min-height:130px;">${escapeHtml(f.observations)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='observations'?'recording':''}" onclick="toggleMic('observations', this)" aria-label="Dicter">${MIC_SVG}</button>
     </div>
-    <button type="button" class="mic-btn ${recordingField==='observations'?'recording':''}" style="position:static;margin-top:4px;" onclick="toggleMic('observations', this)">🎤 Dicter les observations</button>
+    <label>Visiteurs</label>
+    <div class="field-with-mic">
+      <textarea id="rf-visiteurs" placeholder="Ex: inspecteur municipal à 10 h 30" style="min-height:64px;">${escapeHtml(f.visiteurs)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='visiteurs'?'recording':''}" onclick="toggleMic('visiteurs', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <label>EPI</label>
+    <div class="field-with-mic">
+      <textarea id="rf-epi" placeholder="Ex: casques, gilets, bottes" style="min-height:64px;">${escapeHtml(f.epi)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='epi'?'recording':''}" onclick="toggleMic('epi', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <label>Portée de la visite (facultatif)</label>
+    <div class="field-with-mic">
+      <textarea id="rf-portee" placeholder="Ex: zones visitées, éléments vérifiés, éléments non examinés">${escapeHtml(f.portee||"")}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='portee'?'recording':''}" onclick="toggleMic('portee', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
     <label>Actions à prévoir (facultatif)</label>
     <div class="field-with-mic">
       <textarea id="rf-actions" placeholder="Ex: inspection des conduites jeudi, relancer le fournisseur de béton">${escapeHtml(f.actions||"")}</textarea>
-      <button type="button" class="mic-btn ${recordingField==='actions'?'recording':''}" onclick="toggleMic('actions', this)">🎤</button>
+      <button type="button" class="mic-btn ${recordingField==='actions'?'recording':''}" onclick="toggleMic('actions', this)" aria-label="Dicter">${MIC_SVG}</button>
     </div>
     <div class="row">
       <div><label>Météo</label><input type="text" id="rf-meteo" value="${escapeHtml(f.meteo)}"></div>
@@ -2084,11 +2596,11 @@ function renderOnboarding2(){
       <p class="muted">Vous pourrez les modifier plus tard dans Mon entreprise</p>
     </div>
     <div class="card">
-      <div class="field-icon"><span class="ic">🏢</span><input type="text" value="${f.nom_entreprise}" readonly></div>
-      <div class="field-icon"><span class="ic">🪪</span><input type="text" value="${f.numero_rbq}" readonly></div>
-      <div class="field-icon"><span class="ic">📍</span><input type="text" value="${f.adresse}" readonly></div>
-      <div class="field-icon"><span class="ic">✉️</span><input type="text" value="${f.email}" readonly></div>
-      <div class="field-icon"><span class="ic">📞</span><input type="text" value="${f.contact_urgence}" readonly></div>
+      ${champIcone("immeuble","",f.nom_entreprise,{readonly:true})}
+      ${champIcone("licence","",f.numero_rbq,{readonly:true})}
+      ${champIcone("lieu","",f.adresse,{readonly:true})}
+      ${champIcone("courriel","",f.email,{readonly:true})}
+      ${champIcone("telephone","",f.contact_urgence,{readonly:true})}
     </div>
     <button class="btn btn-primary" id="btn-terminer-onboarding">Créer mon entreprise</button>
   </main>`;
@@ -2154,10 +2666,13 @@ function attachHandlers(){
   };
   const p = document.getElementById("rf-photos");
   if(p) p.onchange = (e)=> ajouterPhotos(e.target.files);
-  const champIds = { titre:"rf-titre", description:"rf-description", observations:"rf-observations", actions:"rf-actions", visiteurs:"rf-visiteurs", epi:"rf-epi", meteo:"rf-meteo", nb_travailleurs:"rf-nb" };
+  const champIds = { titre:"rf-titre", description:"rf-description", observations:"rf-observations", actions:"rf-actions", portee:"rf-portee", visiteurs:"rf-visiteurs", epi:"rf-epi", meteo:"rf-meteo", nb_travailleurs:"rf-nb" };
   Object.keys(champIds).forEach(k=>{
     const elm = document.getElementById(champIds[k]);
-    if(elm) elm.oninput = (e)=> state.rapportForm[k]=e.target.value;
+    if(elm){
+      elm.oninput = (e)=>{ state.rapportForm[k] = e.target.value; if(elm.tagName === "TEXTAREA") ajusterHauteur(elm); };
+      if(elm.tagName === "TEXTAREA") ajusterHauteur(elm);
+    }
   });
   const bg = document.getElementById("btn-generer");
   if(bg) bg.onclick = ()=>{ if(!state.rapportForm.titre){ showToast("Le titre est requis."); return; } genererRapport(); };
@@ -2193,7 +2708,18 @@ function attachHandlers(){
   const bt3 = document.getElementById("btn-terminer-onboarding");
   if(bt3) bt3.onclick = ()=>{ terminerOnboarding(); };
   const bge = document.getElementById("btn-enregistrer-entreprise");
-  if(bge) bge.onclick = enregistrerEntreprise;
+  if(bge){
+    bge.onclick = enregistrerEntreprise;
+    const ids = ["ge-nom","ge-rbq","ge-adresse","ge-email","ge-urgence"];
+    const e0 = state.entreprise || {};
+    const init = { "ge-nom":e0.nom_entreprise||"", "ge-rbq":e0.numero_rbq||"", "ge-adresse":e0.adresse_siege||"", "ge-email":e0.email_facturation||"", "ge-urgence":e0.contact_urgence||"" };
+    const verifier = ()=>{
+      let change = false;
+      ids.forEach(id=>{ if(document.getElementById(id).value !== init[id]) change = true; });
+      bge.disabled = !change;
+    };
+    ids.forEach(id=>{ const inp = document.getElementById(id); if(inp) inp.addEventListener("input", ()=>{ const fi = document.getElementById("fi-"+id); if(fi) fi.classList.remove("invalide"); verifier(); }); });
+  }
 }
 
 /* ================= DÉMARRAGE ================= */
