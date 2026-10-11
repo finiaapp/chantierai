@@ -4,22 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ChantierAI — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
-    --green:#43A047; --dark:#37474F; --grey:#90A4AE; --accent:#FFC107;
+    --green:#43A047; --dark:#37474F; --grey:#90A4AE; --accent:#FFC107; --jaune:#F5B700; --jaune-clair:#FFF4CC; --jaune-texte:#7A5A00;
     --bg:#F5F5F5; --border:#E0E0E0;
     --actif:#43A047; --suspendu:#FF9800; --refuse:#E53935; --envoye:#1E88E5;
     --text-pdf:#17181A;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--dark);}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--dark);-webkit-font-smoothing:antialiased;}
+  .kpi-v,.proj-stat .v,.jour-temp,.jour-nb,.kpi-pro .kpi-v{font-variant-numeric:tabular-nums;}
+  button,input,select,textarea{font-family:inherit;}
   #app{max-width:430px;margin:0 auto;min-height:100vh;background:#fff;display:flex;flex-direction:column;position:relative;}
   header{background:var(--green);color:#fff;padding:16px;display:flex;align-items:center;gap:10px;position:relative;}
   header .back{cursor:pointer;background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s;}
   header .back:hover{background:rgba(255,255,255,.28);}
   header .back:active{background:rgba(255,255,255,.4);}
-  header h1{font-size:17px;margin:0;flex:1;text-align:center;padding-right:28px;}
+  header h1{font-size:17px;margin:0;flex:1;min-width:0;text-align:center;padding-right:28px;}
   header .icon-btn{position:absolute;right:14px;top:16px;font-size:20px;cursor:pointer;background:none;border:none;color:#fff;}
   main{flex:1;padding:18px;overflow-y:auto;padding-bottom:90px;}
   header .btn-orient{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
@@ -55,7 +60,7 @@
   .carte-rapport{border:1px solid var(--border);border-left:4px solid #9AA3A8;border-radius:10px;padding:10px 12px;margin:8px 0;cursor:pointer;background:#fff;}
   .carte-rapport .cr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
   .carte-rapport .cr-titre{font-weight:600;min-width:0;}
-  .carte-rapport .cr-num{font-size:11.5px;font-weight:700;color:var(--grey);margin-right:6px;}
+  .carte-rapport .cr-num{font-size:11.5px;font-weight:600;color:var(--grey);margin-right:6px;}
   .carte-rapport .cr-meta{font-size:12px;color:var(--grey);margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
   .toggle-pwd{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--grey);display:flex;align-items:center;padding:2px;}
   .toggle-pwd:hover{color:var(--dark);}
@@ -73,12 +78,12 @@
   .btn:disabled{opacity:.5;cursor:not-allowed;}
   .row{display:flex;gap:10px;}
   .row > div{flex:1;}
-  .status{font-size:12px;font-weight:700;padding:3px 8px;border-radius:5px;color:#fff;display:inline-block;}
+  .status{font-size:12px;font-weight:600;padding:3px 8px;border-radius:5px;color:#fff;display:inline-block;}
   .status.Actif{background:var(--actif);} .status.Suspendu{background:var(--suspendu);}
-  .status.Refusé{background:var(--refuse);} .status.Terminé{background:#757575;} .status.Brouillon{background:#757575;} .status.AApprouver{background:var(--suspendu);} .status.Envoyé{background:var(--envoye);}
+  .status.Refusé{background:var(--refuse);} .status.Terminé{background:#757575;} .status.Brouillon{background:#757575;} .status.AApprouver{background:var(--jaune);color:#3B2F00;} .status.Envoyé{background:var(--envoye);}
   .project-item{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
   .project-item:last-child{border-bottom:none;}
-  .project-item .name{font-weight:600;} .project-item .addr{font-size:12px;color:var(--grey);}
+  .project-item .name{font-weight:400;font-size:15px;} .project-item{gap:10px;} .project-item .status{flex:none;} .project-item .addr{font-size:12px;color:var(--grey);}
   .photo-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
   .photo-thumbs img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);}
   .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:14px;}
@@ -107,13 +112,15 @@
   .field-icon:focus-within .ic{color:var(--green);}
   .field-icon input{outline:none;background:transparent;font-size:15px;}
   .field-icon.invalide{border-color:var(--refuse);box-shadow:0 0 0 3px rgba(229,57,53,.12);}
-  .ent-hero{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#2E7D32,#43A047);color:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 4px 14px rgba(46,125,50,.25);}
-  .ent-avatar{width:68px;height:68px;border-radius:18px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:1px;overflow:hidden;flex:none;}
-  .ent-avatar img{width:100%;height:100%;object-fit:cover;}
-  .ent-nom{font-size:19px;font-weight:700;line-height:1.2;word-break:break-word;}
+  .ent-hero{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--border);border-top:4px solid var(--jaune);color:var(--dark);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .ent-avatar{width:76px;height:76px;border-radius:16px;background:var(--jaune-clair);border:1px solid #F1DC9A;color:var(--jaune-texte);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;letter-spacing:1px;overflow:hidden;flex:none;}
+  .ent-avatar.logo{background:#fff;border-color:var(--border);padding:6px;} .ent-avatar img{width:100%;height:100%;object-fit:contain;}
+  .ent-nom{font-size:19px;font-weight:600;line-height:1.2;word-break:break-word;color:var(--dark);}
   .ent-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-  .ent-pill{background:rgba(255,255,255,.2);border-radius:999px;padding:3px 10px;font-size:11.5px;}
-  .sec-titre{font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--grey);margin:20px 4px 8px;}
+  .ent-pill{background:#F1F4F6;color:#546E7A;border-radius:999px;padding:3px 10px;font-size:11.5px;}
+  .ent-logo-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;align-items:center;}
+  .ent-logo-actions .lien{font-size:12.5px;color:var(--dark);text-decoration:underline;text-underline-offset:3px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit;} .ent-logo-actions .lien.danger{color:var(--refuse);}
+  .sec-titre{font-size:11.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--grey);margin:20px 4px 8px;}
   .card-pro{background:#fff;border:1px solid var(--border);border-radius:14px;padding:6px 14px 14px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
   .card-pro label{font-size:12px;font-weight:600;color:var(--dark);margin-top:12px;display:block;}
   .card-pro .field-icon{margin-top:6px;}
@@ -131,7 +138,7 @@
   .pastille.attente{background:#FFF3CD;color:#7A5B00;}
   .ligne-pro{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
   .ligne-pro:last-child{border-bottom:none;}
-  .avatar-m{width:42px;height:42px;border-radius:50%;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .avatar-m{width:42px;height:42px;border-radius:50%;color:#fff;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none;}
   .nom-m{font-size:14.5px;font-weight:600;color:var(--dark);word-break:break-word;}
   .btn-menu{background:#F5F7F8;border:1px solid var(--border);color:var(--dark);width:36px;height:36px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;padding:0;}
   .btn-menu:hover{background:#ECEFF1;}
@@ -143,7 +150,7 @@
   .sheet .item-menu.actif{border-color:var(--green);background:#E8F5E9;font-weight:600;}
   .sheet .item-menu.danger{color:var(--refuse);}
   .page-edit{background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:16px 14px;margin:8px 0 12px;}
-  .pe-titre{font-weight:700;color:var(--green);font-size:14px;margin:14px 0 4px;}
+  .pe-titre{font-weight:600;color:var(--green);font-size:14px;margin:14px 0 4px;}
   .pe-titre:first-child{margin-top:0;}
   .pe-par{width:100%;border:1px solid transparent;background:transparent;resize:none;overflow:hidden;font:inherit;font-size:13.5px;line-height:1.5;padding:4px 6px;margin:2px -6px;border-radius:4px;box-sizing:border-box;width:calc(100% + 12px);display:block;min-height:0;}
   .pe-par:hover{background:#F6F8F9;}
@@ -180,37 +187,66 @@
   .list-item:last-child{border-bottom:none;}
   .list-item .t{font-weight:600;} .list-item .d{font-size:12px;color:var(--grey);}
   input[type=date]{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--dark);}
-  .suivi-carte{border-left:4px solid var(--border);margin-bottom:0;}
-  .suivi-carte.retard{border-left-color:var(--refuse);}
-  .grille-suivi{display:grid;gap:10px;}
-  .chip-s{flex:none;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:12px;color:#fff;}
-  .chip-s.s-ouv{background:var(--refuse);} .chip-s.s-cours{background:var(--suspendu);} .chip-s.s-res{background:var(--actif);}
+  .chip-s{flex:none;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:12px;color:#fff;}
+  .chip-s.s-ouv{background:var(--refuse);} .chip-s.s-cours{background:var(--jaune);color:#3B2F00;} .chip-s.s-res{background:var(--actif);}
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;}
   .kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;}
-  .kpi-v{font-size:24px;font-weight:800;color:var(--dark);line-height:1.1;} .kpi-v.ok{color:var(--actif);} .kpi-v.alerte{color:var(--refuse);}
+  .kpi-v{font-size:24px;font-weight:600;color:var(--dark);line-height:1.1;} .kpi-v.ok{color:var(--actif);} .kpi-v.alerte{color:var(--refuse);}
   .kpi-l{font-size:11.5px;color:var(--grey);margin-top:2px;}
   .dash-grille{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);} .dash-carte{margin-bottom:0;min-width:0;overflow:hidden;} .dash-carte svg{display:block;width:100%;max-height:230px;height:auto;}
   .dash-aide{font-size:12px;color:var(--grey);margin:-4px 0 8px;line-height:1.4;} .kpi-a{font-size:10.5px;color:var(--grey);margin-top:4px;line-height:1.3;}
-  .dash-titre{font-weight:700;font-size:13.5px;margin-bottom:8px;}
+  .dash-titre{font-weight:600;font-size:13.5px;margin-bottom:8px;}
   .legende{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--grey);margin-top:4px;} .legende i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;}
   .galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;} .galerie figure{margin:0;cursor:pointer;} .galerie img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;display:block;} .galerie figcaption{font-size:10.5px;color:var(--grey);text-align:center;margin-top:2px;}
   .frise{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer;} .frise-pt{flex:none;width:10px;height:10px;border-radius:50%;background:var(--actif);margin-top:5px;}
-  body.paysage #app[data-vue="suivi"] main,body.paysage #app[data-vue="tableauBord"] main{max-width:1200px;}
-  body.paysage .grille-suivi{grid-template-columns:repeat(auto-fill,minmax(340px,1fr));}
+  body.paysage #app[data-vue="tableauBord"] main{max-width:1100px;}
   body.paysage .dash-grille{grid-template-columns:repeat(2,minmax(0,1fr));}
   body.paysage .dash-grille .pleine{grid-column:1/-1;}
-  .proj-hero{background:linear-gradient(135deg,#2E7D32,#43A047);color:#fff;border-radius:14px;padding:18px 18px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(46,125,50,.25);}
-  .proj-nom{font-size:19px;font-weight:800;line-height:1.25;overflow-wrap:anywhere;} .proj-adr{font-size:13px;opacity:.9;margin:4px 0 12px;overflow-wrap:anywhere;}
-  .proj-statut{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.22);}
+  .proj-carte{background:#fff;border:1px solid var(--border);border-left:4px solid var(--actif);border-radius:12px 12px 0 0;padding:16px 16px 14px;}
+  .proj-carte.Suspendu{border-left-color:var(--suspendu);} .proj-carte.Terminé{border-left-color:#90A4AE;}
+  .proj-nom{font-size:19px;font-weight:600;line-height:1.25;color:var(--dark);overflow-wrap:anywhere;}
+  .proj-adr{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--grey);margin:6px 0 12px;overflow-wrap:anywhere;} .proj-adr svg{flex:none;margin-top:2px;}
+  .proj-ligne{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .proj-statut{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;padding:3px 10px;border-radius:12px;background:#E8F5E9;color:#2E7D32;}
+  .proj-statut.Suspendu{background:#FFF3E0;color:#E65100;} .proj-statut.Terminé{background:#ECEFF1;color:#546E7A;}
+  .proj-lien{background:none;border:none;color:var(--grey);font-size:12.5px;font-family:inherit;cursor:pointer;padding:4px 0;text-decoration:underline;text-underline-offset:3px;}
+  .proj-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:12px;}
+  .proj-stat{text-align:center;padding:11px 4px;} .proj-stat + .proj-stat{border-left:1px solid #ECEFF1;}
+  .proj-stat .v{font-size:20px;font-weight:400;color:var(--dark);line-height:1.1;} .proj-stat .v.alerte{color:var(--refuse);} .proj-stat .l{font-size:11px;color:var(--grey);margin-top:2px;}
+  .h-trunc{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
   .tuiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin:14px 0;}
   .tuile{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:#fff;border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;font-family:inherit;color:var(--dark);box-shadow:0 1px 2px rgba(0,0,0,.04);transition:box-shadow .15s,transform .15s;}
   .tuile:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-1px);}
-  .tuile .t-ico{flex:none;width:44px;height:44px;border-radius:11px;background:#E8F5E9;color:var(--actif);display:grid;place-items:center;}
-  .tuile .t-nom{display:block;font-weight:700;font-size:15px;} .tuile .t-desc{display:block;font-size:12.5px;color:var(--grey);margin-top:1px;}
+  .tuile .t-ico{flex:none;width:44px;height:44px;border-radius:11px;background:#F1F4F6;color:#546E7A;display:grid;place-items:center;}
+  .tuile .t-fl{margin-left:auto;flex:none;color:#B0BEC5;line-height:0;}
+  .tuile .t-nom{display:block;font-weight:600;font-size:15px;} .tuile .t-desc{display:block;font-size:12.5px;color:var(--grey);margin-top:1px;}
   .tuile.principale{background:var(--actif);border-color:var(--actif);color:#fff;} .tuile.principale .t-ico{background:rgba(255,255,255,.2);color:#fff;} .tuile.principale .t-desc{color:rgba(255,255,255,.85);}
-  .t-badge{margin-left:auto;flex:none;background:var(--refuse);color:#fff;border-radius:11px;font-size:12px;font-weight:700;padding:2px 9px;}
+  .t-badge{margin-left:auto;flex:none;background:var(--refuse);color:#fff;border-radius:11px;font-size:12px;font-weight:600;padding:2px 9px;}
+  .kpis3{grid-template-columns:repeat(3,minmax(0,1fr));} .kpis3 .kpi{padding:10px 4px;} .kpis3 .kpi-v{font-size:21px;} .kpis3 .kpi-l{font-size:11px;}
+  .dash-hero{margin:2px 0 12px;} .dash-nom{font-size:17px;font-weight:600;color:var(--dark);line-height:1.25;}
+  .kpi-gros{padding:14px 6px;box-shadow:0 1px 2px rgba(0,0,0,.04);} .kpi-gros .kpi-v{font-size:26px;}
+  .kpis-pro{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .kpi-pro{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .kpi-ico{flex:none;width:34px;height:34px;border-radius:50%;background:var(--jaune-clair);color:var(--jaune-texte);display:flex;align-items:center;justify-content:center;}
+  .kpi-pro .kpi-v{font-size:24px;font-weight:600;color:var(--dark);line-height:1.05;} .kpi-pro .kpi-l{font-size:12.5px;font-weight:600;color:var(--dark);margin-top:3px;} .kpi-pro .kpi-s{font-size:11px;color:var(--grey);margin-top:1px;line-height:1.3;}
+  .kpi-txt{min-width:0;}
+  body.paysage .kpis-pro{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .dash-sous{font-size:12px;color:var(--grey);margin:-5px 0 10px;line-height:1.4;}
+  .jours-bande{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(78px,1fr);gap:8px;overflow-x:auto;padding-bottom:4px;}
+  .jour-col{text-align:center;border:1px solid var(--border);border-radius:12px;padding:10px 4px 8px;background:#FAFBFC;display:flex;flex-direction:column;align-items:center;}
+  .jour-sem{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);font-weight:600;} .jour-date{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:6px;}
+  .jour-ico{line-height:0;margin:2px 0 4px;} .jour-temp{font-weight:600;font-size:16px;color:var(--dark);} .jour-cond{font-size:11px;color:var(--grey);line-height:1.25;min-height:28px;margin-top:1px;}
+  .jour-nb{margin-top:8px;padding:4px 10px;border-radius:14px;background:var(--jaune-clair);color:var(--jaune-texte);font-weight:600;font-size:13.5px;display:inline-flex;gap:5px;align-items:center;}
+  .chip-s.s-gris{background:var(--grey);}
+  .infobulle{position:fixed;display:none;z-index:2000;max-width:230px;background:#263238;color:#fff;font-size:12.5px;line-height:1.45;padding:8px 11px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:pre-line;pointer-events:none;}
+  [data-tip]{cursor:default;} .kpi-pro[data-tip]{cursor:help;transition:box-shadow .15s,border-color .15s;} .kpi-pro[data-tip]:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);border-color:#F1DC9A;}
+  .bar-g{cursor:pointer;} .bar-g .bar{opacity:.85;transition:opacity .15s;transform-box:fill-box;transform-origin:50% 100%;} .bar-g:hover .bar{opacity:1;}
+  .anim .bar{animation:croit .55s cubic-bezier(.2,.8,.2,1) both;}
+  @keyframes croit{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+  .jour-col{cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;} .jour-col:hover,.jour-col:focus-visible{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.1);border-color:#F1DC9A;outline:none;}
+  @media (prefers-reduced-motion:reduce){.anim .bar{animation:none;}.jour-col{transition:none;}}
   .kpis4{grid-template-columns:repeat(4,minmax(0,1fr));} .kpis4 .kpi{padding:10px 4px;} .kpis4 .kpi-v{font-size:21px;} .kpis4 .kpi-l{font-size:11px;}
-  .titre-section{font-weight:700;margin:16px 0 4px;}
+  .titre-section{font-weight:600;margin:16px 0 4px;}
   .lien{background:none;border:none;color:var(--grey);text-decoration:underline;font-size:13px;cursor:pointer;font-family:inherit;}
 </style>
 </head>
@@ -232,7 +268,7 @@ let state = {
   projets: [],
   rapports: [], // tous rapports (mock/local + supabase)
   currentProjetId: null,
-  rapportForm: { titre:"", description:"", observations:"", actions:"", portee:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] },
+  rapportForm: { titre:"", date_rapport:"", description:"", observations:"", actions:"", portee:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] },
   contenuGenere: "",
   currentRapportId: null,
   destinataires: [""],
@@ -260,9 +296,9 @@ let state = {
   invitations: [],
   membres: [],
   invitationData: null,
-  suivis: [], rapportsProjet: [], mentionsProjet: [], suivisProjetId: null, suivisErreur: null,
-  filtreSuivi: { statut:"", type:"", resp:"" }, dashFiltre: { periode:"", statut:"", resp:"" },
-  retour: null, dashPlus: false, decisionsSuivi: {}, suiviEdit: null, galerie: { projetId:null, etat:"idle", items:[], erreur:"" }
+  rapportsProjet: [], dashProjetId: null, dashErreur: null,
+  dashFiltre: { periode:"" },
+  retour: null, galerie: { projetId:null, etat:"idle", items:[], erreur:"" }
 };
 
 /* ================= SUPABASE REST + AUTH HELPERS ================= */
@@ -410,6 +446,7 @@ async function genererRapportIA(form){
       const r = construireDepuisRapport(data.rapport);
       if(!r.texte.trim()) return { erreur: "L'IA a retourné un rapport vide. Réessaie." };
       r.valeursAbsentes = (data.verification && Array.isArray(data.verification.valeurs_absentes)) ? data.verification.valeurs_absentes : [];
+      r.verificationIA = data.verification || null;
       return r;
     }
     // Ancien format (texte + bloc ---PHOTOS---), conservé pour compatibilité
@@ -620,7 +657,6 @@ function go(view){
   state.view = view; state.modal = null; render();
   if(view === "listeRapports") chargerListeRapports(true);
   if(view === "detailProjet") chargerResumeProjet();
-  if(view === "creerRapport" && !state.rapportEnEdition) chargerSuiviPourFormulaire();
 }
 
 /* ================= ACTIONS ================= */
@@ -651,6 +687,7 @@ async function chargerEspaceUtilisateur(){
     const ent = await sbSelect("Entreprises", `select=*&id=eq.${state.user.entreprise_id}`);
     if(ent && ent[0]){
       state.entreprise = ent[0];
+      chargerLogoEntreprise();
       await chargerRolesEntreprise();
       entrepriseValide = true;
     }else{
@@ -964,6 +1001,7 @@ async function terminerOnboarding(){
     state.user.entreprise_id = entreprise.id;
   }
   state.dbStatus = "ok";
+  if(state.onboardingForm.logoFichier){ await televerserLogoEntreprise(state.onboardingForm.logoFichier); state.onboardingForm.logoFichier = null; }
 
   const tp = await sbSelect("Types_projets", "select=*&limit=50");
   state.typesProjets = tp || [];
@@ -1067,7 +1105,7 @@ async function creerProjet(nom, adresse, typeProjetId, description){
 }
 
 function ouvrirProjet(id){ state.currentProjetId = id; state.resumeProjet = null; go("detailProjet"); }
-function resetRapportForm(){ state.rapportEnEdition = null; state.currentRapportId = null; state.rapportForm = { titre:"", description:"", observations:"", actions:"", portee:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] }; state.photoSections = []; state.photosChargees = []; state.erreurPhotos = null;  state.decisionsSuivi = {}; }
+function resetRapportForm(){ state.rapportEnEdition = null; state.currentRapportId = null; state.rapportForm = { titre:"", date_rapport: aujourdhuiISO(), description:"", observations:"", actions:"", portee:"", visiteurs:"", epi:"", meteo:"", nb_travailleurs:"", photos:[] }; state.photoSections = []; state.photosChargees = []; state.erreurPhotos = null; }
 
 async function compresserImage(file, maxDim = 1600, qualite = 0.82){
   const url = URL.createObjectURL(file);
@@ -1121,6 +1159,17 @@ function retirerPhoto(i){
   render();
 }
 
+function htmlAlerteControleIA(){
+  if(state.rapportEnEdition || !state.contenuGenere) return "";
+  const v = state.verificationIA;
+  const carte = txt => `<div class="card" style="border-left:4px solid var(--refuse);font-size:13px;">${txt}</div>`;
+  if(!v || v.version !== "v9"){
+    return estAdmin() ? carte("⚠ <strong>La fonction IA du serveur n'est pas à jour</strong> (version " + escapeHtml(v && v.version ? v.version : "ancienne") + "). Le contrôle automatique des chiffres, des heures et des explications ajoutées n'est pas actif. Redéploie la fonction <em>generer-rapport-ia</em> (v9) dans Supabase.") : "";
+  }
+  if(v.relecture_echec) return carte("⚠ <strong>La relecture automatique n'a pas pu se faire.</strong> Relis bien les chiffres, les heures et les explications avant d'approuver.");
+  if(v.reinjectes && v.reinjectes.length) return `<div class="card" style="font-size:13px;color:var(--muted);">Phrases reprises telles quelles de ta saisie, car l'IA les avait oubliées : ${v.reinjectes.map(x=>escapeHtml(typeof x==="string"?x:(x.label||""))).join(" ; ")}.</div>`;
+  return "";
+}
 async function genererRapport(){
   state.enGeneration = true;
   state.erreurGeneration = null;
@@ -1132,6 +1181,7 @@ async function genererRapport(){
   const res = await genererRapportIA(state.rapportForm);
   state.enGeneration = false;
   state.valeursAbsentesIA = res.valeursAbsentes || [];
+  state.verificationIA = res.verificationIA || null;
   if(res.erreur){
     state.erreurGeneration = res.erreur;
     state.contenuGenere = "";
@@ -1340,11 +1390,6 @@ function construireMiseEnPage(){
     });
   }else if((state.contenuGenere || "").trim()){
     blocs.push({ type: "texte", texte: state.contenuGenere.trim() });
-  }
-  const suiviPrec = lignesSuiviPrecedents();
-  if(suiviPrec.length){
-    blocs.push({ type: "titre", texte: "Suivi des points précédents" });
-    suiviPrec.forEach(t => blocs.push({ type: "texte", texte: t }));
   }
   const annexe = photos.map((_, i) => i + 1).filter(n => !placees.has(n)).map(item);
   if(annexe.length){
@@ -1807,6 +1852,77 @@ async function stockageTelecharger(chemin){
   }catch(e){ lastDbError = "STORAGE lecture: " + (e.message || e); return null; }
 }
 
+/* ---- Logo de l'entreprise (stocké dans le même espace privé que les photos, dossier de l'entreprise) ---- */
+async function compresserLogo(file, maxDim = 512){
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((resolve, reject)=>{
+      const im = new Image();
+      im.onload = ()=>resolve(im);
+      im.onerror = ()=>reject(new Error("image illisible"));
+      im.src = url;
+    });
+    const ratio = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * ratio));
+    const h = Math.max(1, Math.round(img.naturalHeight * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, w, h); // fond blanc: le JPEG n'a pas de transparence
+    ctx.drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    return { base64: dataUrl.split(",")[1], mediaType: "image/jpeg" };
+  }finally{ URL.revokeObjectURL(url); }
+}
+async function chargerLogoEntreprise(){
+  const e = state.entreprise;
+  if(!e) return;
+  if(!e.logo_url){ e.logoBase64 = null; e.logoMimeType = null; return; }
+  const blob = await stockageTelecharger(e.logo_url);
+  const cur = state.entreprise;
+  if(!blob || !cur || cur.id !== e.id) return; // le logo est facultatif: sans lui, l'initiale s'affiche
+  try{ cur.logoBase64 = await blobVersBase64(blob); cur.logoMimeType = "image/jpeg"; }catch(x){ return; }
+  if(state.view === "gestionEntreprise") renderGarderScroll();
+}
+async function televerserLogoEntreprise(file){
+  if(!estAdmin()){ showToast("Accès réservé aux administrateurs."); return false; }
+  const e = state.entreprise;
+  if(!e || !e.id || !file) return false;
+  if(file.size > 8 * 1024 * 1024){ showToast("L'image est trop lourde (8 Mo maximum)."); return false; }
+  let img;
+  try{ img = await compresserLogo(file); }
+  catch(x){ showToast("Cette image n'a pas pu être lue. Utilise un fichier PNG ou JPG."); return false; }
+  const chemin = `${e.id}/logo/${idUnique()}.jpg`;
+  if(!(await stockageEnvoyer(chemin, img))){ showToast("⚠ Le logo n'a pas été enregistré : " + messageErreurDb()); return false; }
+  const ancien = e.logo_url;
+  const r = await sbUpdate("Entreprises", `id=eq.${e.id}`, { logo_url: chemin });
+  if(!r || !r[0]){
+    await stockageSupprimer([chemin]);
+    showToast("⚠ Le logo n'a pas été enregistré : " + (r === null ? messageErreurDb() : "droits insuffisants") + ".");
+    return false;
+  }
+  Object.assign(e, r[0]);
+  e.logoBase64 = img.base64; e.logoMimeType = "image/jpeg";
+  if(ancien && ancien !== chemin) stockageSupprimer([ancien]);
+  showToast("Logo enregistré.");
+  if(state.view === "gestionEntreprise") renderGarderScroll();
+  return true;
+}
+async function retirerLogoEntreprise(){
+  if(!estAdmin()) return;
+  const e = state.entreprise;
+  if(!e || !e.id || !e.logo_url) return;
+  if(!confirm("Retirer le logo de l'entreprise ?")) return;
+  const ancien = e.logo_url;
+  const r = await sbUpdate("Entreprises", `id=eq.${e.id}`, { logo_url: null });
+  if(!r || !r[0]){ showToast("⚠ Le logo n'a pas été retiré : " + (r === null ? messageErreurDb() : "droits insuffisants") + "."); return; }
+  Object.assign(e, r[0]);
+  e.logoBase64 = null; e.logoMimeType = null;
+  stockageSupprimer([ancien]);
+  showToast("Logo retiré.");
+  renderGarderScroll();
+}
+
 async function chargerPhotosRapport(rapportId){
   const lignes = await sbSelect("Rapport_photos", `select=*&rapport_id=eq.${encodeURIComponent(rapportId)}&order=ordre.asc,id.asc`);
   if(lignes === null) return { ok: false, erreur: messageErreurDb() };
@@ -1934,7 +2050,7 @@ function htmlPhotosBloc(items, edition){
 }
 function htmlRapportComplet(){
   return construireMiseEnPage().map(b => {
-    if(b.type === "titre") return `<div style="font-weight:700;color:var(--green);margin-top:14px;">${escapeHtml(b.texte)}</div>`;
+    if(b.type === "titre") return `<div style="font-weight:600;color:var(--green);margin-top:14px;">${escapeHtml(b.texte)}</div>`;
     if(b.type === "texte") return `<div style="white-space:pre-wrap;margin:4px 0;">${escapeHtml(b.texte)}</div>`;
     return htmlPhotosBloc(b.items);
   }).join("");
@@ -1984,7 +2100,7 @@ async function ouvrirRapport(id){
   if(state.ouvertureEnCours) return;
   state.ouvertureEnCours = true;
   const retourAvant = state.retour;
-  state.retour = (state.view === "suivi" || state.view === "tableauBord") ? { vue: state.view } : null;
+  state.retour = state.view === "tableauBord" ? { vue: "tableauBord" } : null;
   showToast("Ouverture du rapport...");
   try{
     const [lignes, ph] = await Promise.all([
@@ -2005,15 +2121,9 @@ async function ouvrirRapport(id){
     }
     const projetAvant = state.currentProjetId;
     state.currentProjetId = r.projet_id;
-    if(!(await chargerSuiviPourRapport(r.id, r.projet_id))){
-      showToast("⚠ Impossible de charger le suivi de ce projet (" + (state.suivisErreur || messageErreurDb()) + "). Le rapport n'a pas été ouvert pour éviter d'en perdre une partie. Réessaie.");
-      state.currentProjetId = projetAvant;
-      state.retour = retourAvant;
-      return;
-    }
     state.currentRapportId = id;
     state.contenuGenere = r.contenu_ia || "";
-    state.rapportForm = { titre:r.titre||"", description:r.description||"", observations:r.observations||"", actions:r.actions_prevoir||"", portee:r.portee_visite||"", visiteurs:r.visiteurs||"", epi:r.epi||"", meteo:r.meteo||"", nb_travailleurs:r.nb_travailleurs||"", photos: ph.ok ? ph.photos : [] };
+    state.rapportForm = { titre:r.titre||"", date_rapport: r.date_rapport ? String(r.date_rapport).slice(0, 10) : aujourdhuiISO(), description:r.description||"", observations:r.observations||"", actions:r.actions_prevoir||"", portee:r.portee_visite||"", visiteurs:r.visiteurs||"", epi:r.epi||"", meteo:r.meteo||"", nb_travailleurs:r.nb_travailleurs||"", photos: ph.ok ? ph.photos : [] };
     state.photoSections = ph.ok ? ph.photoSections : [];
     state.photosChargees = ph.ok ? ph.lignes : [];
     state.erreurPhotos = ph.ok ? null : ph.erreur;
@@ -2054,14 +2164,14 @@ async function enregistrerRapportInterne(cible){
     showToast("L'approbation est exigée: soumets ce rapport pour approbation.");
     return;
   }
-  if(!String(state.currentProjetId).startsWith("local-") && !suiviPret()){
-    showToast("⚠ Le suivi du projet n'est pas chargé" + (state.suivisErreur ? " (" + state.suivisErreur + ")" : "") + ": enregistrement bloqué pour ne pas perdre tes décisions sur les points ouverts. Réessaie.");
-    return;
-  }
   const f = state.rapportForm;
+  const dateRapport = f.date_rapport || aujourdhuiISO();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateRapport)){ showToast("La date du rapport n'est pas valide."); return; }
+  if(dateRapport > aujourdhuiISO()){ showToast("La date du rapport ne peut pas être dans le futur."); return; }
   normaliserPhotoSections();
   const champsContenu = {
     titre: f.titre,
+    date_rapport: dateRapport,
     description: f.description,
     observations: f.observations,
     actions_prevoir: f.actions || "",
@@ -2098,8 +2208,6 @@ async function enregistrerRapportInterne(cible){
     state.rapports = state.rapports.map(x => String(x.id) === String(rapport.id) ? rapport : x);
     const sp = await synchroniserPhotos(rapport.id);
     if(!sp.ok){ echec("photos : " + sp.erreur); return; }
-    const mn = await enregistrerMentions(rapport.id);
-    if(!mn.ok){ echec("points de suivi : " + mn.erreur); return; }
     if(cible !== "Brouillon"){
       const c = await changerStatut(rapport.id);
       if(!c || !c[0]){ echecStatut(erreurDbOuDroits(c)); return; }
@@ -2129,8 +2237,7 @@ async function enregistrerRapportInterne(cible){
       entree_terrain_id: entreeId,
       projet_id: state.currentProjetId,
       entreprise_id: state.user?.entreprise_id || null,
-      utilisateur_id: state.user?.id || null,
-      date_rapport: new Date().toISOString().slice(0,10)
+      utilisateur_id: state.user?.id || null
     });
     if(!inserted || !inserted[0]){
       const detail = lastDbError;
@@ -2144,12 +2251,6 @@ async function enregistrerRapportInterne(cible){
     if(!sp.ok){
       await annulerNouveauRapport(rapport.id, entreeId);
       echec("photos : " + sp.erreur);
-      return;
-    }
-    const mn = await enregistrerMentions(rapport.id);
-    if(!mn.ok){
-      await annulerNouveauRapport(rapport.id, entreeId);
-      echec("points de suivi : " + mn.erreur);
       return;
     }
     state.rapports.push(rapport);
@@ -2172,7 +2273,6 @@ async function enregistrerRapportInterne(cible){
   state.erreurPhotos = null;
   state.dbStatus = "ok";
   if(cible === "Approuvé"){
-    await apresApprobationSuivi(rapport.id);
     go("pdfPreview");
   }else if(cible === "À approuver"){
     showToast("Rapport soumis pour approbation.");
@@ -2192,7 +2292,6 @@ async function approuverRevue(id){
   if(!u || !u[0]){ showToast("⚠ Approbation refusée: " + erreurDbOuDroits(u) + "."); return; }
   state.rapports = state.rapports.map(x => String(x.id) === String(id) ? u[0] : x);
   showToast("Rapport approuvé.");
-  await apresApprobationSuivi(id);
   go("rapportsAApprouver");
 }
 
@@ -2573,7 +2672,7 @@ function libelleMois(dateIso){
 
 function htmlLigneRapport(r, nbPhotos, afficherProjet){
   const proj = afficherProjet ? state.projets.find(p => String(p.id) === String(r.projet_id)) : null;
-  const couleur = { "Approuvé": "var(--green)", "À approuver": "var(--suspendu)", "Brouillon": "#9AA3A8" }[r.statut_rapport] || "#9AA3A8";
+  const couleur = { "Approuvé": "var(--green)", "À approuver": "var(--jaune)", "Brouillon": "#9AA3A8" }[r.statut_rapport] || "#9AA3A8";
   const meta = [
     proj ? escapeHtml(proj.nom_projet) : "",
     r.date_rapport ? formatDateRapport(r.date_rapport) : "Date non disponible",
@@ -2599,7 +2698,7 @@ function htmlResultatsListe(){
   let html = "";
   const actifs = filtresListeActifs(L);
   if(L.aTraiter.length){
-    html += `<div style="font-weight:700;color:#7A5B00;margin:10px 0 2px;">À traiter (${L.aTraiter.length})</div>` + L.aTraiter.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
+    html += `<div style="font-weight:600;color:#7A5B00;margin:10px 0 2px;">À traiter (${L.aTraiter.length})</div>` + L.aTraiter.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
   }
   const nbTotal = L.total + L.aTraiter.length;
   html += `<div class="muted" style="font-size:12px;margin:12px 0 2px;">${nbTotal} rapport${nbTotal > 1 ? "s" : ""}${actifs ? " (filtres actifs)" : ""}</div>`;
@@ -2615,7 +2714,7 @@ function htmlResultatsListe(){
   });
   groupes.forEach(g => {
     const ferme = !!L.replies[g.cle];
-    html += `<div onclick="basculerMois('${g.cle}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-top:14px;padding:6px 0;border-bottom:2px solid var(--border);"><span>${escapeHtml(g.libelle)} <span class="muted" style="font-weight:400;">(${g.rapports.length})</span></span><span>${ferme ? "▸" : "▾"}</span></div>`;
+    html += `<div onclick="basculerMois('${g.cle}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-top:14px;padding:6px 0;border-bottom:2px solid var(--border);"><span>${escapeHtml(g.libelle)} <span class="muted" style="font-weight:400;">(${g.rapports.length})</span></span><span>${ferme ? "▸" : "▾"}</span></div>`;
     if(!ferme) html += g.rapports.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
   });
   if(L.items.length < L.total){
@@ -2633,17 +2732,14 @@ async function chargerResumeProjet(){
   const pid = state.currentProjetId;
   if(!pid || String(pid).startsWith("local-")) return;
   const base = `projet_id=eq.${encodeURIComponent(pid)}`;
-  const auj = aujourdhuiISO();
-  const [tot, att, appr, rec, ouv, ret] = await Promise.all([
+  const [tot, att, appr, rec] = await Promise.all([
     sbSelectCount("Rapports", `select=id&${base}&limit=1`),
     sbSelectCount("Rapports", `select=id&${base}&statut_rapport=eq.${encodeURIComponent("À approuver")}&limit=1`),
     sbSelect("Rapports", `select=${COLS_RAPPORT_LISTE}&${base}&statut_rapport=eq.Approuv%C3%A9&order=date_rapport.desc,id.desc&limit=1`),
-    sbSelect("Rapports", `select=${COLS_RAPPORT_LISTE}&${base}&order=date_rapport.desc,id.desc&limit=5`),
-    sbSelectCount("Suivis", `select=id&${base}&statut=neq.${encodeURIComponent("Résolu")}&limit=1`),
-    sbSelectCount("Suivis", `select=id&${base}&statut=neq.${encodeURIComponent("Résolu")}&echeance=lt.${auj}&limit=1`)
+    sbSelect("Rapports", `select=${COLS_RAPPORT_LISTE}&${base}&order=date_rapport.desc,id.desc&limit=5`)
   ]);
   if(String(state.currentProjetId) !== String(pid)) return;
-  state.resumeProjet = { projetId: pid, ok: !!(tot && att && rec), total: tot ? tot.total : 0, aApprouver: att ? att.total : 0, dernierApprouve: (appr && appr[0]) || null, recents: rec || [], ouverts: ouv ? ouv.total : null, enRetard: ret ? ret.total : null };
+  state.resumeProjet = { projetId: pid, ok: !!(tot && att && rec), total: tot ? tot.total : 0, aApprouver: att ? att.total : 0, dernierApprouve: (appr && appr[0]) || null, recents: rec || [] };
   fusionnerRapports(rec || []);
   if(!(state.membres || []).length) await chargerMembres();
   majResumeProjet();
@@ -2651,31 +2747,29 @@ async function chargerResumeProjet(){
 const ICO_TUILE = {
   plus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
   rapports: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
-  suivi: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>',
   stats: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   statut: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
 };
 function htmlTuile(ico, nom, desc, action, opts){
   opts = opts || {};
-  return `<button type="button" class="tuile${opts.principale ? " principale" : ""}" onclick="${action}"><span class="t-ico">${ICO_TUILE[ico]}</span><span style="min-width:0;"><span class="t-nom">${nom}</span><span class="t-desc">${desc}</span></span>${opts.badge ? `<span class="t-badge">${opts.badge}</span>` : ""}</button>`;
+  return `<button type="button" class="tuile${opts.principale ? " principale" : ""}" onclick="${action}"><span class="t-ico">${ICO_TUILE[ico]}</span><span style="min-width:0;"><span class="t-nom">${nom}</span><span class="t-desc">${desc}</span></span>${opts.badge ? `<span class="t-badge">${opts.badge}</span>` : ""}${opts.principale ? "" : '<span class="t-fl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>'}</button>`;
 }
 function htmlResumeProjet(){
   const R = state.resumeProjet;
   const p = projetCourant() || {};
   const pret = R && String(R.projetId) === String(state.currentProjetId);
-  const kpi = (v, l, cl) => `<div class="kpi"><div class="kpi-v ${cl || ""}">${v}</div><div class="kpi-l">${l}</div></div>`;
-  const val = v => (v === null || v === undefined) ? "-" : v;
-  const kpis = !pret ? `<p class="muted center"><span class="spinner"></span>Chargement...</p>`
-    : (!R.ok ? `<p class="muted center">Résumé indisponible.</p>`
-    : `<div class="kpis kpis4">${kpi(R.total, "Rapports")}${kpi(R.aApprouver, "À approuver", R.aApprouver ? "alerte" : "")}${kpi(val(R.ouverts), "Points ouverts")}${kpi(val(R.enRetard), "En retard", R.enRetard ? "alerte" : "")}</div>`);
+  const st = v => escapeHtml(v || "Actif");
+  const stat = (v, l, cl) => `<div class="proj-stat"><div class="v ${cl || ""}">${v}</div><div class="l">${l}</div></div>`;
+  const kpis = !pret ? `<div class="proj-stats ${st(p.statut_projet)}" style="grid-template-columns:1fr;"><p class="muted center" style="margin:10px;"><span class="spinner"></span>Chargement...</p></div>`
+    : (!R.ok ? `<div class="proj-stats ${st(p.statut_projet)}" style="grid-template-columns:1fr;"><p class="muted center" style="margin:10px;">Résumé indisponible.</p></div>`
+    : `<div class="proj-stats ${st(p.statut_projet)}">${stat(R.total, "Rapports")}${stat(R.aApprouver, "À approuver", R.aApprouver ? "alerte" : "")}${stat(R.dernierApprouve && R.dernierApprouve.date_rapport ? dateCourte(R.dernierApprouve.date_rapport) : "-", "Dernier approuvé")}</div>`);
   const tuiles = `<div class="tuiles">
     ${projetActif(p) ? htmlTuile("plus", "Créer un rapport", "Nouveau rapport de chantier", "resetRapportForm();go('creerRapport')", { principale: true }) : ""}
     ${htmlTuile("rapports", "Voir les rapports", "Tous les rapports du projet", "ouvrirListeRapports()")}
-    ${htmlTuile("suivi", "Suivi du projet", "Anomalies et actions à suivre", "ouvrirSuivi()", { badge: pret && R.ok && R.ouverts ? R.ouverts : "" })}
     ${htmlTuile("stats", "Tableau de bord", "Le chantier en un coup d'œil", "ouvrirTableauBord()")}
-    ${peutModifierStatutProjet(p) ? htmlTuile("statut", "Statut du projet", "Actif, suspendu ou terminé", "state.modal='modifierStatut';render()") : ""}
   </div>
-  ${projetActif(p) ? "" : `<p class="muted center">Projet ${escapeHtml(p.statut_projet || "")} : la création de rapports est désactivée.</p>`}`;
+  ${projetActif(p) ? "" : `<p class="muted center">Projet ${escapeHtml(p.statut_projet || "")} : la création de rapports est désactivée.</p>`}
+  ${peutModifierStatutProjet(p) ? `<button class="btn btn-warning" onclick="state.modal='modifierStatut';render()">Modifier le statut</button>` : ""}`;
   const rec = pret && R.ok && R.recents.length ? `<div class="titre-section">Derniers rapports</div>` + R.recents.map(r => htmlLigneRapport(r)).join("") : "";
   return kpis + tuiles + rec;
 }
@@ -2684,156 +2778,1075 @@ function majResumeProjet(){
   if(el) el.innerHTML = htmlResumeProjet();
 }
 
-/* ================= MODULE 5: SUIVI DU PROJET (anomalies et actions) ================= */
-const STATUTS_SUIVI = ["Ouvert", "En cours", "Résolu"];
-const DECISIONS_SUIVI = ["Toujours ouvert", "Résolu", "Ignoré"];
-function peutGererSuivi(){ return estAdmin() || !!(state.user && niveauRole(state.user.role) === "Gestionnaire"); }
+/* ================= TABLEAU DE BORD DU PROJET (simple: rapports, travailleurs, météo) ================= */
 function aujourdhuiISO(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
-function enRetard(s){ return s.statut !== "Résolu" && !!s.echeance && String(s.echeance).slice(0, 10) < aujourdhuiISO(); }
-function joursDepuis(iso){
-  const t = new Date(iso).getTime();
-  return isNaN(t) ? 0 : Math.max(0, Math.floor((Date.now() - t) / 86400000));
+function dateLongue(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+  if(!m) return "";
+  const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  return `${Number(m[3])} ${mois[Number(m[2]) - 1]} ${m[1]}`;
 }
-function libelleRapportId(id){
-  if(id === null || id === undefined) return "";
-  const r = (state.rapportsProjet || []).concat(state.rapports || []).find(x => String(x.id) === String(id));
-  return r ? numeroRapport(r) : "";
-}
-function nomResponsable(id){ return id ? nomMembre(id) : ""; }
-function sansPointFinal(t){ return String(t || "").trim().replace(/[.\s]+$/, ""); }
 function dateCourte(iso){
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
   return m ? `${m[3]}/${m[2]}` : "";
 }
+const COUL = { vert: "#43A047", gris: "#90A4AE", bleu: "#1E88E5", texte: "#37474F" };
 
-// Charge les points de suivi, les rapports et les mentions du projet. Retourne true si tout est chargé.
-async function chargerSuivisProjet(pid){
-  pid = pid !== undefined ? pid : state.currentProjetId;
-  if(!pid || String(pid).startsWith("local-")){
-    state.suivis = []; state.rapportsProjet = []; state.mentionsProjet = []; state.suivisProjetId = pid; state.suivisErreur = null;
-    return true;
-  }
-  const enc = encodeURIComponent(pid);
-  const [su, rp] = await Promise.all([
-    sbSelect("Suivis", `select=*&projet_id=eq.${enc}&order=created_at.asc,id.asc`),
-    sbSelect("Rapports", `select=id,numero,titre,date_rapport,statut_rapport,meteo,nb_travailleurs,utilisateur_id,projet_id&projet_id=eq.${enc}&order=date_rapport.asc,id.asc`)
-  ]);
-  if(String(state.currentProjetId) !== String(pid)) return false;
-  if(su === null || rp === null){ state.suivisErreur = messageErreurDb(); return false; }
-  let mentions = [];
-  if(su.length){
-    const m = await sbSelect("Suivi_mentions", `select=suivi_id,rapport_id,decision&suivi_id=in.(${su.map(x => x.id).join(",")})`);
-    if(m === null){ state.suivisErreur = messageErreurDb(); return false; }
-    mentions = m;
-  }
-  if(!(state.membres || []).length) await chargerMembres();
-  state.suivis = su; state.rapportsProjet = rp; state.mentionsProjet = mentions;
-  state.suivisProjetId = pid; state.suivisErreur = null;
-  return true;
-}
-async function ouvrirVueSuivi(vue){
-  state.suivisErreur = null;
-  state.suivisProjetId = null;
-  go(vue);
-  await chargerSuivisProjet();
-  if(state.view === vue) render();
-}
-function ouvrirSuivi(){ return ouvrirVueSuivi("suivi"); }
+/* ---- Retour vers le tableau de bord après l'ouverture d'un rapport ---- */
 function retourVers(fallback){ return state.retour ? "allerRetour()" : fallback; }
-function libelleRetour(){ return state.retour ? (state.retour.vue === "suivi" ? "Retour au suivi du projet" : "Retour au tableau de bord") : ""; }
-function allerRetour(){ const r = state.retour; if(r) ouvrirVueSuivi(r.vue); }
+function libelleRetour(){ return state.retour ? "Retour au tableau de bord" : ""; }
+function allerRetour(){ if(state.retour) ouvrirTableauBord(); }
 function htmlBoutonRetour(){ return state.retour ? `<button class="btn btn-outline" style="margin-bottom:12px;" onclick="allerRetour()">← ${libelleRetour()}</button>` : ""; }
-function libType(t){ return t; }
-function ouvrirTableauBord(){ return ouvrirVueSuivi("tableauBord"); }
-function suiviPret(){ return String(state.suivisProjetId) === String(state.currentProjetId) && !state.suivisErreur; }
 
-/* ---- Décisions prises dans un rapport (Toujours ouvert, Résolu, Ignoré) ---- */
-function suivisPourFormulaire(){
-  const dec = state.decisionsSuivi || {};
-  return (state.suivis || []).filter(s => s.statut !== "Résolu" || dec[s.id] !== undefined);
-}
-function initialiserDecisions(){
-  if(!state.decisionsSuivi) state.decisionsSuivi = {};
-  suivisPourFormulaire().forEach(s => { if(state.decisionsSuivi[s.id] === undefined) state.decisionsSuivi[s.id] = "Toujours ouvert"; });
-}
-async function chargerSuiviPourFormulaire(){
-  const pid = state.currentProjetId;
-  const ok = await chargerSuivisProjet(pid);
-  if(ok) initialiserDecisions();
-  if(state.view === "creerRapport" && String(state.currentProjetId) === String(pid)) renderGarderScroll();
-}
-async function chargerSuiviPourRapport(rapportId, pid){
-  const ok = await chargerSuivisProjet(pid);
-  if(!ok) return false;
-  const m = await sbSelect("Suivi_mentions", `select=suivi_id,decision&rapport_id=eq.${encodeURIComponent(rapportId)}`);
-  if(m === null){ state.suivisErreur = messageErreurDb(); return false; }
-  state.decisionsSuivi = {};
-  m.forEach(x => { state.decisionsSuivi[x.suivi_id] = x.decision; });
+/* ---- Chargement: uniquement les rapports du projet ---- */
+async function chargerRapportsProjet(pid){
+  pid = pid !== undefined ? pid : state.currentProjetId;
+  if(!pid || String(pid).startsWith("local-")){ state.rapportsProjet = []; state.dashProjetId = pid; state.dashErreur = null; return true; }
+  const rp = await sbSelect("Rapports", `select=id,numero,titre,date_rapport,statut_rapport,meteo,nb_travailleurs,visiteurs,projet_id&projet_id=eq.${encodeURIComponent(pid)}&order=date_rapport.asc,id.asc`);
+  if(rp === null){ state.dashErreur = messageErreurDb(); return false; }
+  state.rapportsProjet = rp; state.dashProjetId = pid; state.dashErreur = null;
   return true;
 }
-function choisirDecision(id, d){
-  if(!state.decisionsSuivi) state.decisionsSuivi = {};
-  state.decisionsSuivi[id] = d;
-  document.querySelectorAll(`[data-decision-suivi="${id}"] button`).forEach(b => b.classList.toggle("actif", b.dataset.d === d));
+async function ouvrirTableauBord(){
+  state.dashAnim = true;
+  setTimeout(() => { state.dashAnim = false; }, 1200);
+  state.dashErreur = null;
+  state.dashProjetId = null;
+  go("tableauBord");
+  await chargerRapportsProjet();
+  if(state.view === "tableauBord") render();
 }
-async function sbUpsert(table, rows, conflit){
-  try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflit}`, {
-      method: "POST",
-      headers: { ...authHeaders(), "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" },
-      body: JSON.stringify(rows)
-    });
-    if(!res.ok){ lastDbError = `UPSERT ${table}: ${res.status} — ${await res.text()}`; throw new Error(lastDbError); }
-    return await res.json();
-  }catch(e){ lastDbError = e.message || String(e); console.warn(lastDbError); return null; }
+function dashPret(){ return String(state.dashProjetId) === String(state.currentProjetId) && !state.dashErreur; }
+function filtrerDash(cle, v){ state.dashFiltre[cle] = v; renderGarderScroll(); }
+
+/* ---- Infobulle (souris: passage; téléphone: toucher) ---- */
+let infobulleCible = null;
+function infobulleEl(){
+  let t = document.getElementById("infobulle");
+  if(!t){ t = document.createElement("div"); t.id = "infobulle"; t.className = "infobulle"; t.setAttribute("role", "tooltip"); document.body.appendChild(t); }
+  return t;
 }
-async function enregistrerMentions(rapportId){
-  const lignes = suivisPourFormulaire()
-    .filter(s => DECISIONS_SUIVI.includes((state.decisionsSuivi || {})[s.id]))
-    .map(s => ({ suivi_id: s.id, rapport_id: rapportId, entreprise_id: state.user.entreprise_id, decision: state.decisionsSuivi[s.id] }));
-  if(!lignes.length) return { ok: true };
-  const r = await sbUpsert("Suivi_mentions", lignes, "suivi_id,rapport_id");
-  if(r === null) return { ok: false, erreur: messageErreurDb() };
-  return { ok: true };
+function montrerInfobulle(cible){
+  const texte = cible && cible.getAttribute("data-tip");
+  if(!texte){ cacherInfobulle(); return; }
+  const t = infobulleEl();
+  t.textContent = texte;
+  t.style.display = "block";
+  const r = cible.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
+  let x = r.left + r.width / 2 - w / 2;
+  x = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+  let y = r.top - h - 10;
+  if(y < 8) y = r.bottom + 10;
+  t.style.left = x + "px"; t.style.top = y + "px";
+  infobulleCible = cible;
 }
-// À l'approbation par un gestionnaire: les points déclarés « Résolu » dans ce rapport passent à Résolu dans le suivi
-async function appliquerResolutions(rapportId){
-  if(!peutGererSuivi()) return { ok: true, nb: 0 };
-  const m = await sbSelect("Suivi_mentions", `select=suivi_id&rapport_id=eq.${encodeURIComponent(rapportId)}&decision=eq.${encodeURIComponent("Résolu")}`);
-  if(m === null) return { ok: false, erreur: messageErreurDb() };
-  let nb = 0;
-  for(const x of m){
-    const u = await sbUpdate("Suivis", `id=eq.${x.suivi_id}&statut=neq.${encodeURIComponent("Résolu")}`, { statut: "Résolu", rapport_resolution_id: rapportId });
-    if(u === null) return { ok: false, erreur: messageErreurDb() };
-    nb += u.length;
-  }
-  return { ok: true, nb };
+function cacherInfobulle(){ const t = document.getElementById("infobulle"); if(t) t.style.display = "none"; infobulleCible = null; }
+document.addEventListener("mouseover", e => { const c = e.target.closest && e.target.closest("[data-tip]"); if(c) montrerInfobulle(c); else if(infobulleCible) cacherInfobulle(); });
+document.addEventListener("click", e => {
+  const c = e.target.closest && e.target.closest("[data-tip]");
+  if(c && c !== infobulleCible) montrerInfobulle(c); else cacherInfobulle();
+});
+window.addEventListener("scroll", () => { if(infobulleCible) cacherInfobulle(); }, true);
+
+/* ---- Graphiques ---- */
+function svgBarres(items, couleur, moyenne){
+  const W = 360, H = 190, g = 30, d = 64, bas = H - 30, haut = 26;
+  if(!items.length) return `<p class="muted center">Pas encore de données.</p>`;
+  const vmax = Math.max(1, ...items.map(it => it.v), moyenne || 0);
+  const max = vmax <= 4 ? 4 : Math.ceil(vmax / 2) * 2;
+  const Y = v => bas - (v / max) * (bas - haut);
+  const grp = (W - g - d) / items.length, bw = Math.min(26, Math.max(10, grp * 0.5));
+  const reperes = [0, max / 2, max];
+  const moy = (moyenne || moyenne === 0) && moyenne > 0 ? moyenne : null;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Travailleurs par jour">
+    ${reperes.map(v => `<line x1="${g}" y1="${Y(v)}" x2="${W - d}" y2="${Y(v)}" stroke="${v === 0 ? "#B0BEC5" : "#ECEFF1"}" stroke-width="1"/><text x="${g - 6}" y="${Y(v) + 3.5}" text-anchor="end" font-size="10" fill="${COUL.gris}">${v}</text>`).join("")}
+    ${items.map((it, i) => {
+      const x = g + i * grp + (grp - bw) / 2;
+      return `<g class="bar-g" data-tip="${escapeHtml(it.tip || "")}"><rect class="bar-hit" x="${g + i * grp}" y="${haut - 14}" width="${grp}" height="${bas - haut + 14}" fill="transparent"/>`
+        + `<rect class="bar" x="${x}" y="${Y(it.v)}" width="${bw}" height="${Math.max(0, Y(0) - Y(it.v))}" rx="4" fill="${couleur}" style="animation-delay:${i * 60}ms"/>`
+        + `<text x="${x + bw / 2}" y="${Y(it.v) - 6}" text-anchor="middle" font-size="11.5" font-weight="600" fill="${COUL.texte}">${it.v}</text>`
+        + `<text x="${g + i * grp + grp / 2}" y="${H - 10}" text-anchor="middle" font-size="10" fill="${COUL.gris}">${escapeHtml(it.l)}</text></g>`;
+    }).join("")}
+    ${moy ? `<line x1="${g}" y1="${Y(moy)}" x2="${W - d}" y2="${Y(moy)}" stroke="#F5B700" stroke-width="1.8" stroke-dasharray="5 4"/><text x="${W - d + 6}" y="${Y(moy) - 1}" font-size="10" fill="#7A5A00">Moyenne</text><text x="${W - d + 6}" y="${Y(moy) + 13}" font-size="13" font-weight="600" fill="#7A5A00">${String(Math.round(moy * 10) / 10).replace(".", ",")}</text>` : ""}
+  </svg>`;
 }
-async function apresApprobationSuivi(rapportId){
-  const rs = await appliquerResolutions(rapportId);
-  if(!rs.ok) showToast("⚠ Rapport approuvé, mais les points résolus n'ont pas pu être mis à jour dans le suivi : " + rs.erreur);
-  else if(rs.nb) showToast(`${rs.nb} point${rs.nb > 1 ? "s" : ""} marqué${rs.nb > 1 ? "s" : ""} résolu${rs.nb > 1 ? "s" : ""} dans le suivi.`);
+const ICO_METEO = {
+  soleil: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  nuage: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#78909C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 11a3.5 3.5 0 0 1-.5 7z"/></svg>',
+  pluie: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E88E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 8a3.5 3.5 0 0 1-.5 7"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg>',
+  neige: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#64B5F6" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>',
+  neutre: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#90A4AE" stroke-width="2" stroke-linecap="round"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>'
+};
+function iconeMeteo(txt){
+  const t = String(txt || "").toLowerCase();
+  if(/neig|verglas/.test(t)) return ICO_METEO.neige;
+  if(/pluie|pluv|averse|bruine/.test(t)) return ICO_METEO.pluie;
+  if(/nuag|couvert|gris/.test(t)) return ICO_METEO.nuage;
+  if(/soleil|ensoleill|dégag|clair/.test(t)) return ICO_METEO.soleil;
+  return ICO_METEO.neutre;
+}
+const MOIS_COURTS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const JOURS_COURTS = ["dim.","lun.","mar.","mer.","jeu.","ven.","sam."];
+function jourCourt(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+  if(!m) return { sem: "", jour: "" };
+  const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return { sem: JOURS_COURTS[dt.getDay()], jour: `${Number(m[3])} ${MOIS_COURTS[Number(m[2]) - 1]}` };
+}
+const ICO_PERSONNES = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/></svg>';
+function htmlColonneJour(r){
+  const m = String(r.meteo || "");
+  const temp = /-?\d+(?:[.,]\d+)?\s*°\s?C/i.exec(m);
+  const cond = m.replace(/-?\d+(?:[.,]\d+)?\s*°\s?C/i, "").replace(/[,;\s]+$/g, "").replace(/^[,;\s]+/g, "");
+  const j = jourCourt(r.date_rapport);
+  const nb = (r.nb_travailleurs !== null && r.nb_travailleurs !== undefined && r.nb_travailleurs !== "") ? Number(r.nb_travailleurs) : null;
+  return `<div class="jour-col" role="button" tabindex="0" title="Ouvrir ${escapeHtml(numeroRapport(r) || "le rapport")}" onclick="ouvrirRapport('${r.id}')" onkeydown="if(event.key==='Enter')ouvrirRapport('${r.id}')">
+    <div class="jour-sem">${escapeHtml(j.sem)}</div><div class="jour-date">${escapeHtml(j.jour)}</div>
+    <div class="jour-ico">${iconeMeteo(m)}</div>
+    <div class="jour-temp">${temp ? escapeHtml(temp[0].replace(/\s+/g, " ")) : "-"}</div>
+    <div class="jour-cond">${escapeHtml(cond || "")}</div>
+    <div class="jour-nb">${ICO_PERSONNES}<span>${nb === null ? "-" : nb}</span></div>
+  </div>`;
 }
 
-// Section « Suivi des points précédents » du rapport: écrite par l'application, jamais par l'IA
-function lignesSuiviPrecedents(){
-  if(String(state.suivisProjetId) !== String(state.currentProjetId)) return [];
-  const dec = state.decisionsSuivi || {};
-  return (state.suivis || [])
-    .filter(s => dec[s.id] === "Toujours ouvert" || dec[s.id] === "Résolu")
-    .map(s => {
-      const num = libelleRapportId(s.rapport_origine_id);
-      let t = `${num ? num + " : " : ""}${sansPointFinal(s.description)} (${libType(s.type).toLowerCase()}). Dans ce rapport : ${dec[s.id].toLowerCase()}.`;
-      const resp = nomResponsable(s.responsable_id);
-      if(resp) t += ` Responsable : ${resp}.`;
-      if(s.echeance) t += ` Échéance : ${formatDateLongue(String(s.echeance).slice(0, 10))}.`;
-      return t;
-    });
+/* ---- Photos du projet (afficher / masquer) ---- */
+function htmlGalerie(){
+  const G = state.galerie;
+  if(G.projetId !== state.currentProjetId || G.etat === "idle") return `<button class="btn-mini" onclick="chargerGalerie()">Afficher les photos du projet</button>`;
+  if(G.etat === "charge") return `<p class="muted"><span class="spinner"></span>Chargement des photos...</p>`;
+  if(G.etat === "erreur") return `<p class="muted">Photos indisponibles (${escapeHtml(G.erreur || "")}). <button class="btn-mini" onclick="chargerGalerie()">Réessayer</button></p>`;
+  if(!G.items.length) return `<p class="muted">Aucune photo dans les rapports de ce projet.</p>`;
+  return `<div class="pe-ligne" style="margin-bottom:8px;"><button class="btn-mini" onclick="masquerGalerie()">Masquer les photos</button></div><div class="galerie">${G.items.map(it => `<figure onclick="ouvrirRapport('${it.rapport_id}')" title="Ouvrir le rapport"><img src="${it.url}" alt="${escapeHtml(it.legende)}"></figure>`).join("")}</div>`;
 }
-function htmlPointsOuvertsFormulaire(){
-  if(String(state.currentProjetId).startsWith("local-")) return "";
-  if(state.suivisErreur) return `<div class="card" style="border-left:4px solid var(--refuse);font-size:13px;">⚠ Le suivi du projet n'a pas pu être chargé (${escapeHtml(state.suivisErreur)}). <button class="btn-mini" onclick="chargerSuiviPourFormulaire()">Réessayer</button></div>`;
-  if(String(state.suivisProjetId) !== String(state.currentProjetId)) return `<p 
+function masquerGalerie(){
+  (state.galerie.items || []).forEach(it => { try{ URL.revokeObjectURL(it.url); }catch(e){} });
+  state.galerie = { projetId: state.currentProjetId, etat: "idle", items: [], erreur: "" };
+  renderGarderScroll();
+}
+async function chargerGalerie(){
+  const pid = state.currentProjetId;
+  const ids = (state.rapportsProjet || []).map(r => r.id);
+  state.galerie = { projetId: pid, etat: "charge", items: [], erreur: "" };
+  renderGarderScroll();
+  if(!ids.length){ state.galerie.etat = "ok"; renderGarderScroll(); return; }
+  const lignes = await sbSelect("Rapport_photos", `select=id,chemin,rapport_id,legende&rapport_id=in.(${ids.map(x => encodeURIComponent(x)).join(",")})&order=created_at.desc,id.desc&limit=12`);
+  if(lignes === null){ state.galerie.etat = "erreur"; state.galerie.erreur = messageErreurDb(); renderGarderScroll(); return; }
+  const items = [];
+  for(const l of lignes){
+    const blob = await stockageTelecharger(l.chemin);
+    if(blob) items.push({ url: URL.createObjectURL(blob), rapport_id: l.rapport_id, legende: l.legende || "" });
+  }
+  if(state.galerie.projetId !== pid) return;
+  state.galerie.etat = "ok"; state.galerie.items = items;
+  if(state.view === "tableauBord") renderGarderScroll();
+}
+
+/* ---- Écran ---- */
+function rapportsDash(){
+  const F = state.dashFiltre;
+  const depuis = F.periode === "30j" ? new Date(Date.now() - 30 * 86400000) : (F.periode === "3m" ? new Date(Date.now() - 91 * 86400000) : null);
+  return (state.rapportsProjet || []).filter(r => r.date_rapport && (!depuis || new Date(String(r.date_rapport).slice(0, 10) + "T12:00:00") >= depuis));
+}
+function renderTableauBord(){
+  const entete = header("Tableau de bord", "go('detailProjet')");
+  if(state.dashErreur){
+    return `${entete}<main><div class="card" style="border-left:4px solid var(--refuse);"><div style="font-weight:600;color:var(--refuse);">Le tableau de bord n'a pas pu être chargé</div><div style="font-size:13px;margin-top:6px;">${escapeHtml(state.dashErreur)}</div><button class="btn btn-outline" style="margin-top:10px;" onclick="ouvrirTableauBord()">Réessayer</button></div></main>`;
+  }
+  if(!dashPret()) return `${entete}<main><p class="muted center"><span class="spinner"></span>Chargement du tableau de bord...</p></main>`;
+  const p = projetCourant() || {};
+  const F = state.dashFiltre;
+  const rap = rapportsDash();
+  const jours = new Set(rap.map(r => String(r.date_rapport).slice(0, 10))).size;
+  const avecNb = rap.filter(r => r.nb_travailleurs !== null && r.nb_travailleurs !== undefined && r.nb_travailleurs !== "");
+  const moy = avecNb.length ? Math.round(avecNb.reduce((t, r) => t + (Number(r.nb_travailleurs) || 0), 0) / avecNb.length * 10) / 10 : null;
+  const visites = rap.filter(r => r.visiteurs && !/^\s*(aucun|aucune|non|rien|-)/i.test(String(r.visiteurs))).length;
+  const travail = avecNb.slice(-12).map(r => {
+    const n = Number(r.nb_travailleurs) || 0;
+    return { l: dateCourte(r.date_rapport), v: n, tip: [dateLongue(r.date_rapport), `${n} personne${n > 1 ? "s" : ""} sur le chantier`, r.meteo ? String(r.meteo) : "", numeroRapport(r)].filter(Boolean).join("\n") };
+  });
+  const jourCols = rap.slice(-10);
+  const recents = rap.slice().reverse().slice(0, 6);
+  const ICO = {
+    rap: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+    cal: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>',
+    eq: ICO_PERSONNES.replace('width="15" height="15"', 'width="18" height="18"'),
+    vis: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+  };
+  const kpi = (ico, v, l, sous, tip) => `<div class="kpi-pro" data-tip="${escapeHtml(tip || "")}"><span class="kpi-ico">${ICO[ico]}</span><div class="kpi-txt"><div class="kpi-v">${v}</div><div class="kpi-l">${l}</div><div class="kpi-s">${sous}</div></div></div>`;
+  const carte = (titre, corps, cls, sous) => `<div class="card dash-carte ${cls || ""}"><div class="dash-titre">${titre}</div>${sous ? `<div class="dash-sous">${sous}</div>` : ""}${corps}</div>`;
+  const chipStatut = s => `<span class="chip-s ${s === "Approuvé" ? "s-res" : (s === "À approuver" ? "s-cours" : "s-gris")}">${escapeHtml(s || "")}</span>`;
+  const lignes = recents.length ? recents.map(r => `<div class="frise" onclick="ouvrirRapport('${r.id}')">
+      <div style="min-width:0;flex:1;"><div style="font-weight:600;font-size:13.5px;">${escapeHtml(numeroRapport(r) ? numeroRapport(r) + " : " : "")}${escapeHtml(r.titre || "Sans titre")}</div><div class="muted" style="font-size:12px;">${escapeHtml(dateLongue(r.date_rapport))}</div></div>${chipStatut(r.statut_rapport)}</div>`).join("")
+    : `<p class="muted center">Aucun rapport pour le moment.</p>`;
+  const moyTxt = moy === null ? "-" : String(moy).replace(".", ",");
+  return `${entete}
+  <main>
+    <div class="dash-hero"><div class="dash-nom">${escapeHtml(p.nom_projet || "")}</div><div class="muted" style="font-size:13px;">Le chantier en un coup d'œil</div></div>
+    <div style="margin:0 0 12px;"><select onchange="filtrerDash('periode', this.value)" aria-label="Période" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;">${[["", "Toute la période"], ["30j", "30 derniers jours"], ["3m", "3 derniers mois"]].map(([v, l]) => `<option value="${v}"${F.periode === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>
+    <div class="kpis-pro">${kpi("rap", rap.length, "Rapports rédigés", "depuis le début", "Nombre de rapports du projet sur la période choisie, brouillons compris.")}${kpi("cal", jours, "Jours de chantier", "journées avec un rapport", "Nombre de dates différentes ayant au moins un rapport.")}${kpi("eq", moyTxt, "Personnes en moyenne", "par jour sur le chantier", "Moyenne du nombre de travailleurs inscrit dans chaque rapport (" + avecNb.length + " rapport" + (avecNb.length > 1 ? "s" : "") + " avec ce nombre).")}${kpi("vis", visites, "Jours avec visiteurs", "inspecteur, ingénieur, client", "Rapports où des visiteurs sont notés (autre que « Aucun »).")}</div>
+    <div class="dash-grille" style="margin-top:12px;">
+      ${carte("Jour par jour", jourCols.length ? `<div class="jours-bande">${jourCols.map(htmlColonneJour).join("")}</div>` : `<p class="muted center">Pas encore de données.</p>`, "pleine", "La météo et le nombre de personnes présentes à chaque journée. Touche une journée pour ouvrir son rapport.")}
+      ${carte("Personnes sur le chantier", `<div class="${state.dashAnim ? "anim" : ""}">${svgBarres(travail, "#43A047", moy)}</div>`, "pleine", "Le trait jaune montre la moyenne. Passe sur une barre pour voir le détail.")}
+      ${carte("Derniers rapports", lignes)}
+      ${carte("Photos du projet", htmlGalerie())}
+    </div>
+  </main>`;
+}
+
+/* ================= LISTE DES PROJETS (recherche, filtre) ================= */
+function htmlListeProjets(){
+  const F = state.filtreProjets;
+  const q = F.q.trim().toLowerCase();
+  const ordre = { "Actif": 0, "Suspendu": 1, "Terminé": 2 };
+  const liste = state.projets
+    .filter(p => (!F.statut || (p.statut_projet || "Actif") === F.statut))
+    .filter(p => !q || ((p.nom_projet || "") + " " + (p.adresse_projet || "")).toLowerCase().includes(q))
+    .sort((a, b) => ((ordre[a.statut_projet || "Actif"] ?? 3) - (ordre[b.statut_projet || "Actif"] ?? 3)) || (a.nom_projet || "").localeCompare(b.nom_projet || "", "fr"));
+  if(!state.projets.length) return `<p class="muted center">Aucun projet encore. Crée ton premier projet pour commencer.</p>`;
+  if(!liste.length) return `<p class="muted center">Aucun projet ne correspond.</p>`;
+  return liste.map(p => `
+    <div class="project-item" onclick="ouvrirProjet('${p.id}')">
+      <div><div class="name">${escapeHtml(p.nom_projet || "Sans titre")}</div><div class="addr">${escapeHtml(p.adresse_projet || "")}</div></div>
+      <span class="status ${p.statut_projet || 'Actif'}">${p.statut_projet || 'Actif'}</span>
+    </div>`).join("");
+}
+function filtrerProjets(cle, valeur){
+  state.filtreProjets[cle] = valeur;
+  const el = document.getElementById("liste-projets");
+  if(el) el.innerHTML = htmlListeProjets();
+}
+
+/* ================= RENDU ================= */
+function render(){
+  const app = document.getElementById("app");
+  document.querySelectorAll(".sheet-overlay").forEach(el=>el.remove());
+  app.innerHTML = "";
+  const el = document.createElement("div");
+
+  try{
+  if(state.view==="accueil") el.innerHTML = renderAccueil();
+  else if(state.view==="mesProjets") el.innerHTML = renderMesProjets();
+  else if(state.view==="ajouterProjet") el.innerHTML = renderAjouterProjet();
+  else if(state.view==="detailProjet") el.innerHTML = renderDetailProjet();
+  else if(state.view==="listeRapports") el.innerHTML = renderListeRapports();
+  else if(state.view==="gestionEntreprise") el.innerHTML = estAdmin() ? renderGestionEntreprise() : renderMonProfil();
+  else if(state.view==="monProfil") el.innerHTML = renderMonProfil();
+  else if(state.view==="creerRapport") el.innerHTML = renderCreerRapport();
+  else if(state.view==="generationIA") el.innerHTML = renderGenerationIA();
+  else if(state.view==="approbationRapport") el.innerHTML = renderApprobationRapport();
+  else if(state.view==="revueRapport") el.innerHTML = renderRevueRapport();
+  else if(state.view==="rapportsAApprouver") el.innerHTML = renderRapportsAApprouver();
+  else if(state.view==="pdfPreview") el.innerHTML = renderPdfPreview();
+  else if(state.view==="tableauBord") el.innerHTML = renderTableauBord();
+  else if(state.view==="envoiPDF") el.innerHTML = renderEnvoiPDF();
+  else if(state.view==="onboardingEtape1") el.innerHTML = renderOnboarding1();
+  else if(state.view==="onboardingEtape2") el.innerHTML = renderOnboarding2();
+  else if(state.view==="accepterInvitation") el.innerHTML = renderAccepterInvitation();
+  }catch(err){
+    console.error("Erreur d'affichage", state.view, err);
+    el.innerHTML = `<main style="padding:20px;"><div class="card"><h3 style="margin-top:0;">Erreur d'affichage</h3><p class="muted">L'écran « ${escapeHtml(state.view)} » n'a pas pu s'afficher : ${escapeHtml(err && err.message || err)}</p><button class="btn btn-primary" onclick="go('mesProjets')">Retour à mes projets</button></div></main>`;
+  }
+
+  app.appendChild(el);
+  appliquerAffichage();
+
+  if(state.modal==="modifierStatut"){
+    const overlay = document.createElement("div");
+    overlay.className="sheet-overlay";
+    overlay.innerHTML = `<div class="sheet">
+      <button class="btn btn-primary" onclick="modifierStatutProjet('Actif')">Actif</button>
+      <button class="btn btn-warning" onclick="modifierStatutProjet('Suspendu')">Suspendu</button>
+      ${estAdmin() ? `<button class="btn btn-danger" onclick="modifierStatutProjet('Terminé')">Terminé</button>` : ``}
+      <button class="btn btn-grey" onclick="state.modal=null;render()">Annuler</button>
+    </div>`;
+    overlay.onclick = (e)=>{ if(e.target===overlay){ state.modal=null; render(); } };
+    document.body.appendChild(overlay);
+  }
+  if(state.modal==="ajouterDestinataire"){
+    const overlay = document.createElement("div");
+    overlay.className="sheet-overlay";
+    overlay.innerHTML = `<div class="sheet">
+      <h3 style="margin-top:0;">Ajouter un destinataire</h3>
+      <label>Email *</label>
+      <input type="text" id="ad-email" placeholder="ex: directeur@entreprise.com">
+      <label>Nom (optionnel)</label>
+      <input type="text" id="ad-nom" placeholder="ex: Jean Tremblay">
+      <div class="row" style="margin-top:14px;">
+        <button class="btn btn-warning" onclick="state.modal=null;render()">Annuler</button>
+        <button class="btn btn-primary" id="ad-confirmer">Confirmer</button>
+      </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById("ad-confirmer").onclick = ()=>{
+      const email = document.getElementById("ad-email").value;
+      const nomDest = document.getElementById("ad-nom").value;
+      if(!email){ showToast("Email requis."); return; }
+      if(state.destinataires[state.destinataires.length-1]==="") state.destinataires.pop();
+      state.destinataires.push(email);
+      sbInsert("Destinataires", { email, nom: nomDest||null, projet_id: state.currentProjetId, entreprise_id: state.user?.entreprise_id||null });
+      state.modal=null; render();
+    };
+  }
+
+  attachHandlers();
+}
+
+function header(title, back, iconBtn){
+  const backSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const paysage = affichagePaysage();
+  const iconeOrient = paysage
+    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>`
+    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="18" y1="12" x2="18" y2="12"/></svg>`;
+  const titreOrient = paysage ? "Passer en affichage Portrait" : "Passer en affichage Paysage";
+  return `<header${iconBtn?' class="avec-profil"':''}>${back?`<button class="back" onclick="${back}">${backSvg}</button>`:""}<h1 style="padding-right:44px;">${title}</h1>${iconBtn?`<button class="icon-btn" onclick="${iconBtn}">👤</button>`:""}<button class="btn-orient" onclick="basculerAffichage()" title="${titreOrient}" aria-label="${titreOrient}">${iconeOrient}</button></header>`;
+}
+
+/* ================= AFFICHAGE PORTRAIT / PAYSAGE ================= */
+function affichagePaysage(){
+  let v = state.affichageSession || null;
+  if(!v){ try{ v = localStorage.getItem("chantierai_affichage"); }catch(e){} }
+  if(v === "paysage") return true;
+  if(v === "portrait") return false;
+  return window.innerWidth >= 900; // par défaut: grand écran = paysage
+}
+function appliquerAffichage(){
+  document.body.classList.toggle("paysage", affichagePaysage());
+  const app = document.getElementById("app");
+  if(app) app.setAttribute("data-vue", state.view || "");
+}
+function basculerAffichage(){
+  const suivant = affichagePaysage() ? "portrait" : "paysage";
+  try{ localStorage.setItem("chantierai_affichage", suivant); }catch(e){ showToast("Ton navigateur ne peut pas mémoriser ce choix, il sera appliqué pour cette session seulement."); }
+  state.affichageSession = suivant;
+  renderGarderScroll();
+}
+
+function renderAccueil(){
+  const isInscription = state.authTab==='inscription';
+  return `
+  <main style="padding-top:14px;">
+    <div class="logo-block">
+      <img src="data:image/png;base64,${state.logoBase64}" style="width:210px;height:auto;margin:0 auto;display:block;image-rendering:-webkit-optimize-contrast;">
+      
+    </div>
+    <div class="login-frame">
+    <div class="tabs">
+      <div class="tab ${isInscription?'active':''}" onclick="state.authTab='inscription';render()">S'inscrire</div>
+      <div class="tab ${!isInscription?'active':''}" onclick="state.authTab='connexion';render()">Se connecter</div>
+    </div>
+    ${isInscription ? `
+      <div style="font-size:19px;font-weight:600;">Bienvenue</div>
+      <div class="muted">Créez votre compte</div>
+      <label>Nom complet *</label><input type="text" id="acc-nom" placeholder="Nom complet">
+      <label>Courriel *</label><input type="email" id="acc-courriel" placeholder="Courriel">
+      <label>Mot de passe *</label>
+      <div class="pwd-wrap"><input type="password" id="acc-mdp" placeholder="Mot de passe"><button type="button" class="toggle-pwd" onclick="togglePwd('acc-mdp', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
+      <label>Confirmer le mot de passe *</label>
+      <div class="pwd-wrap"><input type="password" id="acc-mdp2" placeholder="Confirmer le mot de passe"><button type="button" class="toggle-pwd" onclick="togglePwd('acc-mdp2', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
+      <button class="btn btn-primary" id="btn-connexion">Créer mon compte</button>
+      <p class="muted" style="margin-top:8px;">* Champs obligatoires</p>
+    ` : `
+      <div style="font-size:19px;font-weight:600;">Content de vous revoir</div>
+      <div class="muted">Connectez-vous à votre espace chantier</div>
+      <label>Courriel *</label><input type="email" id="acc-courriel" placeholder="Courriel">
+      <label>Mot de passe *</label>
+      <div class="pwd-wrap"><input type="password" id="acc-mdp" placeholder="Mot de passe"><button type="button" class="toggle-pwd" onclick="togglePwd('acc-mdp', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
+      <button class="btn btn-primary" id="btn-connexion">Se connecter</button>
+      <p class="muted center" style="margin-top:10px;">Mot de passe oublié?</p>
+      <p class="muted" style="margin-top:8px;">* Champs obligatoires</p>
+    `}
+    </div>
+    <p class="muted center" style="margin-top:16px;">Compte de test — aucune vérification réelle dans ce prototype.</p>
+  </main>`;
+}
+
+function renderMesProjets(){
+  const F = state.filtreProjets;
+  const filtres = state.projets.length > 5 ? `
+    <input type="text" id="filtre-projets" placeholder="Rechercher un projet (nom ou adresse)" value="${escapeHtml(F.q)}" oninput="filtrerProjets('q', this.value)">
+    <select onchange="filtrerProjets('statut', this.value)" aria-label="Filtrer par statut" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin:6px 0 10px;font-size:13px;">
+      ${[["", "Tous les statuts"], ["Actif", "Actifs"], ["Suspendu", "Suspendus"], ["Terminé", "Terminés"]].map(([v, l]) => `<option value="${v}"${F.statut === v ? " selected" : ""}>${l}</option>`).join("")}
+    </select>` : "";
+  return `
+  ${header("Mes projets", null, "ouvrirMenuProfil()")}
+  <main>
+    ${dbBadge()}
+    ${(()=>{
+      if(!peutApprouver()) return "";
+      const n = state.rapports.filter(r=>r.statut_rapport==="À approuver").length;
+      return n ? `<div class="card" style="border-left:4px solid var(--suspendu);display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:13.5px;font-weight:600;">${n} rapport${n>1?"s":""} à approuver</div><button class="btn btn-warning" style="width:auto;margin:0;padding:8px 14px;" onclick="ouvrirRapportsAApprouver()">Voir</button></div>` : "";
+    })()}
+    <div class="card">${filtres}<div id="liste-projets">${htmlListeProjets()}</div></div>
+    <button class="btn btn-primary" onclick="go('ajouterProjet')">+ Nouveau projet</button>
+  </main>`;
+}
+function libelleTypeProjet(t){
+  const k = ["nom_type_projet","nom_type","type_projet","libelle","nom","label","name"].find(c=>t[c]);
+  if(k) return String(t[k]);
+  const k2 = Object.keys(t).find(c=>c!=="id" && typeof t[c]==="string" && !/^(created|date|cree)/i.test(c));
+  return k2 ? String(t[k2]) : ("Type " + t.id);
+}
+function renderAjouterProjet(){
+  const types = (state.typesProjets||[]).map(t=>`<option value="${escapeHtml(t.id)}">${escapeHtml(libelleTypeProjet(t))}</option>`).join("");
+  return `
+  ${header("Nouveau projet","go('mesProjets')")}
+  <main>
+    <div class="card">
+      <label>Nom du projet *</label>
+      <input type="text" id="np-nom" placeholder="ex: Rénovation école Saint-Joseph">
+      <label>Adresse *</label>
+      <input type="text" id="np-adresse" placeholder="ex: 123 rue Principale, Montréal">
+      <label>Type de projet</label>
+      <select id="np-type"><option value="">Non précisé</option>${types}</select>
+      <label>Description (optionnel)</label>
+      <textarea id="np-desc" rows="3" placeholder="Description du projet"></textarea>
+    </div>
+    <button class="btn btn-primary" id="btn-creer-projet">Créer le projet</button>
+    <button class="btn btn-grey" onclick="go('mesProjets')">Annuler</button>
+  </main>`;
+}
+function renderDetailProjet(){
+  const p = state.projets.find(p=>String(p.id)===String(state.currentProjetId)) || {};
+  return `
+  ${header(`<span class="h-trunc">${escapeHtml(p.nom_projet||"Détail projet")}</span>`,"go('mesProjets')")}
+  <main>
+    <div class="card center">
+      <label>Nom du projet</label><div style="font-size:16px;">${escapeHtml(p.nom_projet||"Nom non disponible")}</div>
+      <label>Adresse</label><div>${escapeHtml(p.adresse_projet||"Adresse non disponible")}</div>
+      <label>Statut</label><span class="status ${escapeHtml(p.statut_projet||'Actif')}" style="margin-top:6px;">${escapeHtml(p.statut_projet||'Actif')}</span>
+    </div>
+    <div id="resume-projet">${htmlResumeProjet()}</div>
+    ${(estAdmin() && p.statut_projet === "Terminé") ? `<button class="btn btn-danger" style="margin-top:16px;" onclick="supprimerProjet()">Supprimer le projet</button>` : ``}
+  </main>`;
+}
+
+function renderListeRapports(){
+  const L = state.liste;
+  const nouveau = L.projetId !== state.currentProjetId;
+  const q = nouveau ? "" : L.q, st = nouveau ? "" : L.statut, au = nouveau ? "" : L.auteur, pe = nouveau ? "" : L.periode;
+  const sel = (action, label, options, val) => `<select onchange="${action}" aria-label="${label}" style="flex:1;min-width:0;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;">${options.map(([v, l]) => `<option value="${escapeHtml(v)}"${String(val) === String(v) ? " selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select>`;
+  const membres = (state.membres || []).map(m => [String(m.id), m.nom || m.email]);
+  return `
+  ${header("Rapports","go('detailProjet')")}
+  <main>
+    <input type="text" id="liste-q" placeholder="Rechercher (titre ou contenu)" value="${escapeHtml(q)}" oninput="filtrerListeRapports('q', this.value)">
+    <div style="display:flex;gap:6px;margin:6px 0;">
+      ${sel("filtrerListeRapports('statut', this.value)", "Statut", [["", "Tous les statuts"], ["Brouillon", "Brouillon"], ["À approuver", "À approuver"], ["Approuvé", "Approuvé"]], st)}
+      ${sel("filtrerListeRapports('periode', this.value)", "Période", [["", "Toute période"], ["30j", "30 derniers jours"], ["3m", "3 derniers mois"], ["an", "Cette année"]], pe)}
+    </div>
+    ${membres.length > 1 ? `<div style="display:flex;gap:6px;margin-bottom:6px;">${sel("filtrerListeRapports('auteur', this.value)", "Auteur", [["", "Tous les auteurs"], ...membres], au)}</div>` : ""}
+    <div id="liste-resultats">${nouveau ? `<p class="muted center"><span class="spinner"></span>Chargement...</p>` : htmlResultatsListe()}</div>
+  </main>`;
+}
+function renderRapportsAApprouver(){
+  const list = state.rapports.filter(r=>r.statut_rapport==="À approuver");
+  const items = list.map(r=>{
+    const proj = state.projets.find(p=>String(p.id)===String(r.projet_id));
+    return `
+    <div class="list-item" style="cursor:pointer;" onclick="ouvrirRapport('${r.id}')">
+      <div class="t">${escapeHtml(r.titre||"Sans titre")}</div>
+      <div class="d">${escapeHtml(proj ? proj.nom_projet : "Projet")} · ${escapeHtml(nomMembre(r.utilisateur_id))} · ${r.date_rapport ? formatDateRapport(r.date_rapport) : ""}</div>
+      <span class="status AApprouver">À approuver</span>
+    </div>`;
+  }).join("") || `<p class="muted center">Aucun rapport en attente d'approbation.</p>`;
+  return `
+  ${header("Rapports à approuver","go('mesProjets')")}
+  <main>${items}</main>`;
+}
+
+function renderRevueRapport(){
+  const r = rapportCourant() || {};
+  const f = state.rapportForm;
+  return `
+  ${header("Revue du rapport",retourVers("go('rapportsAApprouver')"))}
+  <main>
+    <p class="muted">Rédigé par ${escapeHtml(nomMembre(r.utilisateur_id))}. Vérifie le contenu, puis approuve ou renvoie avec un motif.</p>
+    ${r.commentaire_revision ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:600;color:#7A5B00;">Dernier motif de renvoi</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(r.commentaire_revision)}</div></div>` : ""}
+    <div class="pdf-preview">
+      <h2>${escapeHtml(f.titre||"Rapport de chantier")}</h2>
+      <div class="meta">${r.date_rapport ? formatDateRapport(r.date_rapport) : ""} · Météo: ${escapeHtml(f.meteo||"-")} · Travailleurs: ${escapeHtml(String(f.nb_travailleurs||"-"))}</div>
+      ${htmlRapportComplet()}
+    </div>
+    ${htmlErreurPhotos()}
+    <button class="btn btn-primary" onclick="approuverRevue('${r.id}')">Approuver</button>
+    <button class="btn btn-danger" onclick="renvoyerRevue('${r.id}')">Renvoyer avec un motif</button>
+  </main>`;
+}
+
+function renderGestionEntreprise(){
+  const e = state.entreprise;
+  const nbMembres = (state.membres||[]).filter(m=>m.actif!==false).length;
+  const roleDefaut = (e.roles||[]).includes("Employé") ? "Employé" : ((e.roles||[])[0] || "");
+  const avatar = e.logoBase64
+    ? `<img src="data:${e.logoMimeType};base64,${e.logoBase64}" alt="Logo">`
+    : escapeHtml(initialesEntreprise(e.nom_entreprise));
+  const aLogo = !!e.logoBase64;
+  return `
+  ${header("Mon entreprise","go('mesProjets')")}
+  <main>
+    <div class="ent-hero">
+      <div class="ent-avatar${aLogo ? " logo" : ""}"${(aLogo && estAdmin()) ? ` role="button" tabindex="0" title="Modifier le logo" style="cursor:pointer;" onclick="state.logoActions=!state.logoActions;renderGarderScroll()"` : ""}>${avatar}</div>
+      <div style="min-width:0;">
+        <div class="ent-nom">${escapeHtml(e.nom_entreprise||"Mon entreprise")}</div>
+        <div class="ent-meta">
+          ${e.numero_rbq ? `<span class="ent-pill">RBQ ${escapeHtml(e.numero_rbq)}</span>` : ``}
+          <span class="ent-pill">${nbMembres} membre${nbMembres>1?"s":""}</span>
+        </div>
+        ${(estAdmin() && (!aLogo || state.logoActions)) ? `<div class="ent-logo-actions">
+          <label for="ent-logo-input" class="lien">${aLogo ? "Changer le logo" : "Ajouter le logo"}</label>
+          ${aLogo ? `<button type="button" class="lien danger" onclick="retirerLogoEntreprise()">Retirer</button>` : ""}
+          <input type="file" id="ent-logo-input" accept="image/png,image/jpeg,image/webp" style="display:none;">
+        </div>` : ""}
+      </div>
+    </div>
+
+    <div class="sec-titre">Identité</div>
+    <div class="card-pro">
+      <label>Nom de l'entreprise</label>
+      ${champIcone("immeuble","ge-nom",e.nom_entreprise,{placeholder:"Nom légal ou commercial"})}
+      <label>Numéro de licence RBQ</label>
+      ${champIcone("licence","ge-rbq",e.numero_rbq,{placeholder:"0000-0000-00",aide:"Format habituel : 10 chiffres, ex. 5600-1234-01"})}
+    </div>
+
+    <div class="sec-titre">Coordonnées</div>
+    <div class="card-pro">
+      <label>Adresse du siège</label>
+      ${champIcone("lieu","ge-adresse",e.adresse_siege,{placeholder:"Numéro, rue, ville"})}
+      <label>Courriel de facturation</label>
+      ${champIcone("courriel","ge-email",e.email_facturation,{type:"email",placeholder:"contact@entreprise.com",aide:"Utilisé comme adresse de l'entreprise"})}
+    </div>
+
+    <div class="sec-titre">Sécurité</div>
+    <div class="card-pro">
+      <label>Contact d'urgence</label>
+      ${champIcone("telephone","ge-urgence",e.contact_urgence,{type:"tel",placeholder:"514 555-0123",inputmode:"tel",aide:"Personne à joindre en cas d'incident sur un chantier"})}
+    </div>
+    <button class="btn btn-primary" id="btn-enregistrer-entreprise" disabled>Enregistrer les modifications</button>
+
+    <div class="sec-titre">Approbation des rapports</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div>
+          <div style="font-size:13.5px;">Exiger l'approbation</div>
+          <div class="muted" style="font-size:11.5px;margin-top:2px;">Les rapports des employés doivent être approuvés par un gestionnaire ou un administrateur avant l'envoi au client.</div>
+        </div>
+        <label class="interrupteur" style="margin:0;"><input type="checkbox" ${e.approbation_requise?'checked':''} onchange="basculerApprobation(this.checked)" aria-label="Exiger l'approbation"><span class="piste"></span></label>
+      </div>
+    </div>
+
+    <div class="sec-titre">Membres de l'équipe (${nbMembres})</div>
+    <div class="card-pro" style="padding-top:4px;">
+      ${(state.membres||[]).map(m=>{
+        const moi = !!(state.authUser && m.auth_id === state.authUser.id);
+        const inactif = m.actif === false;
+        const libelle = m.nom ? nomAffiche(m.nom) : m.email;
+        return `
+        <div class="ligne-pro" style="${inactif?'opacity:.55;':''}">
+          <div class="avatar-m" style="background:${couleurRole(m.role)};">${escapeHtml(initialesEntreprise(m.nom||m.email))}</div>
+          <div style="min-width:0;flex:1;">
+            <div class="nom-m">${escapeHtml(libelle)}${moi?' <span class="muted">(vous)</span>':''}</div>
+            ${m.nom ? `<div class="muted" style="font-size:12px;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.email||"")}</div>` : ``}
+            <div style="margin-top:5px;"><span class="pastille ${inactif?'off':'role'}">${inactif?'Désactivé':escapeHtml(m.role||"Sans rôle")}</span></div>
+          </div>
+          ${moi ? `` : `<button class="btn-menu" aria-label="Actions" onclick="ouvrirMenuMembre('${m.id}')">⋯</button>`}
+        </div>`;
+      }).join("") || `<div class="vide-pro">Invitez votre premier collaborateur ci-dessous.</div>`}
+    </div>
+
+    <div class="sec-titre">Inviter un membre</div>
+    <div class="card-pro">
+      <label>Courriel du collaborateur</label>
+      <div class="field-icon"><span class="ic">${ICONES.courriel}</span><input type="email" id="ge-invite-email" placeholder="prenom.nom@entreprise.com" autocomplete="off"></div>
+      <label>Rôle</label>
+      <input type="hidden" id="ge-invite-role" value="${escapeHtml(roleDefaut)}">
+      <div class="puces" id="ge-invite-puces">
+        ${(e.roles||[]).map((r,i,arr)=>`<button type="button" class="puce${r===roleDefaut?' actif':''}" onclick="choisirRoleInvitation(this)" data-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join("")}
+      </div>
+      <div class="aide-champ" id="ge-invite-aide">${escapeHtml(descriptionRole(roleDefaut))}</div>
+      <button class="btn btn-primary" id="ge-invite-btn" onclick="inviterMembre()" style="margin-top:14px;">Envoyer l'invitation</button>
+    </div>
+
+    ${state.invitations && state.invitations.length ? `
+    <div class="sec-titre">Invitations en attente (${state.invitations.length})</div>
+    <div class="card-pro" style="padding-top:4px;">
+      ${state.invitations.map(inv=>`
+        <div class="ligne-pro">
+          <div class="avatar-m" style="background:#B0BEC5;">${escapeHtml(initialesEntreprise(inv.email))}</div>
+          <div style="min-width:0;flex:1;"><div class="nom-m" style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(inv.email)}</div><div style="margin-top:5px;"><span class="pastille attente">En attente</span> <span class="muted" style="font-size:12px;">${escapeHtml(inv.role)}</span></div></div>
+          <button class="btn-menu" aria-label="Annuler l'invitation" title="Annuler l'invitation" onclick="annulerInvitation(${inv.id})">✕</button>
+        </div>`).join("")}
+    </div>` : ""}
+
+    <div class="sec-titre">Rôles de l'entreprise</div>
+    <div class="card-pro" style="padding-top:4px;">
+      ${(e.roles||[]).map(r=>`
+        <div class="ligne-pro">
+          <div style="min-width:0;flex:1;">
+            <span class="pastille role">${escapeHtml(r)}</span>
+            ${ROLES_BASE.includes(r) ? `` : `<span class="pastille attente" style="margin-left:4px;">Accès ${escapeHtml(niveauRole(r))}</span>`}
+            <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(descriptionRole(r))}</div>
+          </div>
+          ${ROLES_BASE.includes(r) ? `<span class="muted" style="font-size:11px;">Rôle de base</span>` : `<button class="btn-menu" aria-label="Supprimer le rôle" title="Supprimer le rôle" onclick="retirerRole(decodeURIComponent('${encodeURIComponent(r)}'))">${ICONE_CORBEILLE}</button>`}
+        </div>`).join("") || `<div class="vide-pro">Aucun rôle défini.</div>`}
+    </div>
+
+    <div class="sec-titre">Créer un rôle personnalisé</div>
+    <div class="card-pro">
+      <label>Titre du rôle</label>
+      <input type="text" id="nouveau-role" placeholder="Ex. Chargé de projet" style="margin-top:6px;">
+      <label>Niveau d'accès</label>
+      <div class="puces" id="nr-niveaux">
+        <button type="button" class="puce${(state.niveauNouveauRole||"Employé")==="Employé"?" actif":""}" data-niveau="Employé" onclick="choisirNiveauNouveauRole(this)">Comme un Employé</button>
+        <button type="button" class="puce${state.niveauNouveauRole==="Gestionnaire"?" actif":""}" data-niveau="Gestionnaire" onclick="choisirNiveauNouveauRole(this)">Comme un Gestionnaire</button>
+      </div>
+      <div class="aide-champ" id="nr-aide">${state.niveauNouveauRole==="Gestionnaire" ? "Peut approuver les rapports et gérer le statut des projets." : "Crée des rapports, soumis à approbation. Aucun droit de gestion."}</div>
+      <div class="aide-champ">Seul le rôle Administrateur donne un accès total.</div>
+      <button class="btn btn-outline" style="margin-top:12px;" onclick="ajouterRole()">+ Créer le rôle</button>
+    </div>
+
+    <button class="btn btn-danger" style="margin-top:16px;" onclick="seDeconnecter()">Se déconnecter</button>
+  </main>`;
+}
+
+function renderMonProfil(){
+  const u = state.user || {};
+  return `
+  ${header("Mon profil","go('mesProjets')")}
+  <main>
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;">${escapeHtml(u.nom||"")}</div>
+      <div class="muted">${escapeHtml(u.courriel||"")}</div>
+      <div style="margin-top:8px;"><span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#E6F4EA;color:#1E7B34;">${escapeHtml(u.role||"")}</span></div>
+      <div class="muted" style="margin-top:8px;">${escapeHtml((state.entreprise&&state.entreprise.nom_entreprise)||"")}</div>
+    </div>
+    <button class="btn btn-danger" style="margin-top:16px;" onclick="seDeconnecter()">Se déconnecter</button>
+  </main>`;
+}
+
+function renderCreerRapport(){
+  const f = state.rapportForm;
+  const photoThumbs = f.photos.map((p,i)=>`<div style="position:relative;"><img src="${p.previewUrl}"><button type="button" onclick="retirerPhoto(${i})" aria-label="Retirer la photo" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--refuse);color:#fff;font-size:12px;line-height:20px;padding:0;cursor:pointer;">×</button></div>`).join("");
+  return `
+  ${header("Nouveau rapport","go('detailProjet')")}
+  <main>
+    <label>Titre *</label><input type="text" id="rf-titre" value="${escapeHtml(f.titre)}" placeholder="Titre du rapport">
+    <label>Date du rapport</label><input type="date" id="rf-date" value="${escapeHtml(f.date_rapport || aujourdhuiISO())}" max="${aujourdhuiISO()}">
+    <label>Description des travaux</label>
+    <div class="field-with-mic">
+      <textarea id="rf-description" placeholder="Description des travaux" style="min-height:100px;">${escapeHtml(f.description)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='description'?'recording':''}" onclick="toggleMic('description', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <label>Observations</label>
+    <div class="field-with-mic">
+      <textarea id="rf-observations" placeholder="Retards, anomalies, état du chantier..." style="min-height:130px;">${escapeHtml(f.observations)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='observations'?'recording':''}" onclick="toggleMic('observations', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <label>Visiteurs</label>
+    <div class="field-with-mic">
+      <textarea id="rf-visiteurs" placeholder="Ex: inspecteur municipal à 10 h 30" style="min-height:64px;">${escapeHtml(f.visiteurs)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='visiteurs'?'recording':''}" onclick="toggleMic('visiteurs', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <label>EPI</label>
+    <div class="field-with-mic">
+      <textarea id="rf-epi" placeholder="Ex: casques, gilets, bottes" style="min-height:64px;">${escapeHtml(f.epi)}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='epi'?'recording':''}" onclick="toggleMic('epi', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <label>Portée de la visite (facultatif)</label>
+    <div class="field-with-mic">
+      <textarea id="rf-portee" placeholder="Ex: zones visitées, éléments vérifiés, éléments non examinés">${escapeHtml(f.portee||"")}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='portee'?'recording':''}" onclick="toggleMic('portee', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <label>Actions à prévoir (facultatif)</label>
+    <div class="field-with-mic">
+      <textarea id="rf-actions" placeholder="Ex: inspection des conduites jeudi, relancer le fournisseur de béton">${escapeHtml(f.actions||"")}</textarea>
+      <button type="button" class="mic-btn ${recordingField==='actions'?'recording':''}" onclick="toggleMic('actions', this)" aria-label="Dicter">${MIC_SVG}</button>
+    </div>
+    <div class="row">
+      <div><label>Météo</label><input type="text" id="rf-meteo" value="${escapeHtml(f.meteo)}"></div>
+      <div><label>Nb travailleurs</label><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" id="rf-nb" value="${escapeHtml(f.nb_travailleurs)}"></div>
+    </div>
+    <label>Photos du chantier (${f.photos.length}/${MAX_PHOTOS_RAPPORT})</label>
+    <input type="file" id="rf-photos" accept="image/*" multiple capture="environment">
+    <div class="photo-thumbs">${photoThumbs}</div>
+    <button class="btn btn-primary" id="btn-generer">Générer avec IA</button>
+    <p class="muted" style="margin-top:8px;">* Champs obligatoires</p>
+  </main>`;
+}
+
+function htmlPageEditable(){
+  const m = modeleCourant();
+  const photos = state.rapportForm.photos || [];
+  const ps = state.photoSections || [];
+  const info = n => ps.find(x => x.photo === n) || {};
+  const placees = new Set();
+  m.secs.forEach(x => x.segs.forEach(g => { if(g.t === "f") placees.add(g.n); }));
+  const ouvertes = state.sectionsOuvertes || [];
+  let html = `<div class="page-edit">`;
+  m.secs.forEach((x, a) => {
+    if(!x.segs.length) return;
+    html += `<div class="pe-titre" data-a="${a}">${escapeHtml(x.sec)}</div>`;
+    let k = 0;
+    while(k < x.segs.length){
+      const g = x.segs[k];
+      if(g.t === "p"){
+        html += `<textarea class="pe-par" data-a="${a}" data-b="${k}" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';majParagraphe(${a},${k},this.value)" placeholder="Écris ici...">${escapeHtml(g.txt)}</textarea>`;
+        k++;
+      }else{
+        const items = [];
+        let j = k;
+        while(j < x.segs.length && x.segs[j].t === "f" && (j === k || x.segs[j].cote)){
+          const f = x.segs[j];
+          if(photos[f.n - 1]) items.push({ a, b: j, aPrev: j > 0 && x.segs[j - 1].t === "f", cote: !!f.cote && j > 0 && x.segs[j - 1].t === "f", n: f.n, photo: photos[f.n - 1], legende: (info(f.n).legende || "").trim(), certitude: info(f.n).certitude || "", taille: f.taille });
+          j++;
+        }
+        if(items.length) html += htmlPhotosBloc(items, true);
+        k = j;
+      }
+    }
+  });
+  html += `</div>`;
+  const vides = m.secs.filter(x => !x.segs.length);
+  if(vides.length) html += `<div class="muted" style="margin:10px 0 4px;">Ajouter une section :</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${vides.map(x => `<button class="chip-add" onclick="ajouterSectionVide('${x.sec.replace(/'/g, "\\'")}')">+ ${escapeHtml(x.sec)}</button>`).join("")}</div>`;
+  const libres = photos.map((_, i) => i + 1).filter(n => !placees.has(n));
+  if(libres.length){
+    html += `<label style="margin-top:14px;">Photos non placées</label><p class="muted" style="margin:0 0 6px;">Ces photos seront placées en annexe à la fin du PDF, sauf si tu les places dans une section.</p>` + libres.map(n => `
+      <div class="card" style="display:flex;gap:10px;align-items:center;">
+        <img src="${photos[n - 1].previewUrl}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex:none;">
+        <div style="flex:1;min-width:0;"><div class="muted" style="font-size:11.5px;">Photo ${n}</div>
+          <select onchange="if(this.value) placerPhotoLibre(${n}, this.value)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+            <option value="">Placer dans une section...</option>
+            ${SECTIONS_RAPPORT.map(sx => `<option value="${escapeHtml(sx)}">${escapeHtml(sx)}</option>`).join("")}
+          </select></div>
+      </div>`).join("");
+  }
+  return html;
+}
+
+function renderGenerationIA(){
+  const entete = header("Génération du rapport","go('creerRapport')");
+  if(state.enGeneration){
+    return `${entete}<main><p><span class="spinner"></span>Génération en cours...</p></main>`;
+  }
+  if(state.erreurGeneration){
+    return `${entete}
+    <main>
+      <div class="card" style="border-left:4px solid var(--refuse);">
+        <div style="font-weight:600;color:var(--refuse);">La génération a échoué</div>
+        <div style="font-size:13px;margin-top:6px;white-space:pre-wrap;">${escapeHtml(state.erreurGeneration)}</div>
+      </div>
+      <p class="muted">Aucun rapport n'a été créé. Tu peux réessayer ou revenir au formulaire.</p>
+      <button class="btn btn-primary" id="btn-regenerer">Réessayer</button>
+      <button class="btn btn-outline" onclick="go('creerRapport')">Retour au formulaire</button>
+    </main>`;
+  }
+  if(!state.contenuGenere){
+    return `${entete}
+    <main>
+      <p class="muted">Aucun contenu à afficher pour ce rapport.</p>
+      <button class="btn btn-outline" onclick="go('creerRapport')">Retour au formulaire</button>
+    </main>`;
+  }
+
+  const parsed = parseSections(state.contenuGenere);
+  const re = rapportEnEditionObj();
+  const photos = state.rapportForm.photos || [];
+  const legendes = (state.photoSections || []).map((x, i) => ({ x, i })).filter(o => photos[o.x.photo - 1]);
+
+  const champsSections = parsed.trouve ? htmlPageEditable() : `<label>Contenu du rapport</label>
+       <textarea oninput="majBrut(this.value)" style="min-height:260px;">${escapeHtml(state.contenuGenere)}</textarea>`;
+  const blocPhotos = "";
+
+  return `${entete}
+  <main>
+    <p style="color:var(--green);font-weight:600;">✓ ${state.rapportEnEdition ? "Brouillon ouvert" : "Rapport généré"}</p>
+    ${htmlAlerteControleIA()}
+    ${(state.valeursAbsentesIA && state.valeursAbsentesIA.length) ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:600;color:#7A5B00;">À vérifier avant d'approuver</div><p class="muted" style="margin:6px 0 0;">Ces valeurs de ta saisie ne semblent pas reprises dans le rapport : ${state.valeursAbsentesIA.map(v => "<strong>" + escapeHtml(v) + "</strong>").join(", ")}. Ajoute-les au texte au besoin.</p></div>` : ""}
+    ${(re && re.commentaire_revision) ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:600;color:#7A5B00;">Rapport renvoyé: à corriger</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(re.commentaire_revision)}</div></div>` : ""}
+    <p class="muted">Voici la page telle qu'elle sera dans le PDF. Clique dans un texte pour le modifier. Glisse une photo pour la déplacer (entre deux paragraphes, ou sur le côté d'une autre photo pour les mettre côte à côte) et tire la poignée verte pour changer sa taille. Les petites icônes au-dessus d'une photo permettent de la monter, la descendre, la placer à côté de la précédente, modifier sa légende ou la retirer. L'IA n'a utilisé que ce que tu as saisi et ce qui est visible sur les photos.</p>
+    ${champsSections}
+    ${blocPhotos}
+    <button class="btn btn-primary" id="btn-approuver">${libelleValidation()}</button>
+    <button class="btn btn-outline" id="btn-brouillon">Enregistrer le brouillon</button>
+    <button class="btn btn-warning" id="btn-regenerer">Régénérer</button>
+    ${state.rapportEnEdition ? `<button class="btn btn-danger" onclick="supprimerBrouillon('${state.rapportEnEdition}')">Supprimer le brouillon</button>` : ""}
+  </main>`;
+}
+
+function renderApprobationRapport(){
+  return `
+  ${header("Approbation du rapport","go('generationIA')")}
+  <main>
+    <label>Rapport généré</label>
+    <div class="card" style="white-space:pre-wrap;min-height:220px;font-size:13.5px;">${formatRapportAffichage(state.contenuGenere)}</div>
+    <div class="row">
+      <button class="btn btn-danger" onclick="go('creerRapport')">Rejeter</button>
+      <button class="btn btn-primary" id="btn-approuver-final">Approuver</button>
+    </div>
+  </main>`;
+}
+
+function renderPdfPreview(){
+  const f = state.rapportForm;
+  return `
+  ${header("Aperçu avant envoi",retourVers("go('listeRapports')"))}
+  <main>
+    ${htmlBoutonRetour()}
+    ${dbBadge()}
+    <p class="muted">Vérifie le rapport avant de le télécharger ou de l'envoyer.</p>
+    <div class="pdf-preview">
+      <h2>${escapeHtml(f.titre||"Rapport de chantier")}</h2>
+      <div class="meta">${(()=>{ const rc = rapportCourant(); return rc && rc.date_rapport ? formatDateRapport(rc.date_rapport) : new Date().toLocaleDateString('fr-CA'); })()} · Météo: ${escapeHtml(f.meteo||"-")} · Travailleurs: ${escapeHtml(String(f.nb_travailleurs||"-"))}</div>
+      ${htmlRapportComplet()}
+    </div>
+    ${htmlErreurPhotos()}
+
+    ${(()=>{
+      const r = rapportCourant();
+      const st = r ? r.statut_rapport : "Approuvé";
+      const bandeau = st === "Approuvé" ? "" : `<div class="card" style="border-left:4px solid var(--suspendu);font-size:13px;">${st === "À approuver" ? "Ce rapport est en attente d'approbation. Il ne peut pas encore être envoyé." : "Ce rapport est un brouillon. Il ne peut pas encore être envoyé."}</div>`;
+      return bandeau
+        + `<button class="btn btn-primary" id="btn-telecharger">Télécharger le PDF</button>`
+        + (st === "Approuvé" ? `<button class="btn btn-outline" onclick="go('envoiPDF')">Envoyer par email</button>` : "")
+        + ((st === "Approuvé" && r && estAdmin()) ? `<button class="btn btn-warning" onclick="rouvrirRapport('${r.id}')">Rouvrir le rapport</button>` : "");
+    })()}
+  </main>`;
+}
+
+function renderEnvoiPDF(){
+  const rows = state.destinataires.map((d,i)=>`
+    <div class="dest-row">
+      <input type="text" placeholder="email@exemple.com" value="${d}" oninput="majDestinataire(${i}, this.value)">
+      <button onclick="retirerDestinataire(${i})">🗑</button>
+    </div>`).join("");
+  return `
+  ${header("Envoi du rapport","go('pdfPreview')")}
+  <main>
+    <label>Aperçu du rapport</label>
+    <div class="card" style="max-height:120px;overflow:auto;font-size:12px;white-space:pre-wrap;">${formatRapportAffichage(state.contenuGenere)}</div>
+    <label>Destinataires</label>
+    ${rows}
+    <button class="btn btn-outline" onclick="state.modal='ajouterDestinataire';render()">+ Ajouter un destinataire</button>
+    <button class="btn btn-primary" id="btn-envoyer">Envoyer par email</button>
+    <div class="badge-sim">⚠ Ce prototype simule l'envoi — Resend n'est pas branché ici.</div>
+  </main>`;
+}
+
+function renderOnboarding1(){
+  const f = state.onboardingForm;
+  return `
+  ${header("Créer mon entreprise")}
+  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:50%;background:var(--accent);"></div></div>
+  <main>
+    <p class="muted center">Étape 1 sur 2 — Informations de l'entreprise</p>
+    <div class="center">
+      <label for="ob-logo-upload" style="cursor:pointer;display:block;">
+        ${state.onboardingForm.logoBase64
+          ? `<img src="data:${state.onboardingForm.logoMimeType};base64,${state.onboardingForm.logoBase64}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 6px;display:block;">`
+          : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed var(--border);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:var(--grey);font-size:24px;">🏢</div>`}
+        <p style="color:var(--green);font-size:13px;font-weight:600;">${state.onboardingForm.logoBase64 ? "Changer le logo" : "Appuyer pour ajouter un logo (optionnel)"}</p>
+      </label>
+      <input type="file" id="ob-logo-upload" accept="image/*" style="display:none;">
+    </div>
+    <label>Nom de l'entreprise *</label><input type="text" id="ob-nom" value="${f.nom_entreprise}" placeholder="Ex: Construction Leblanc...">
+    <label>Numéro RBQ *</label><input type="text" id="ob-rbq" value="${f.numero_rbq}" placeholder="Ex: 5678-9012-34">
+    <label>Adresse du siège social</label><input type="text" id="ob-adresse" value="${f.adresse}" placeholder="Ex: 123 rue Principale, M...">
+    <label>Email de facturation</label><input type="email" id="ob-email" value="${f.email}" placeholder="Ex: facturation@constru...">
+    <label>Contact d'urgence</label><input type="text" id="ob-urgence" value="${f.contact_urgence}" placeholder="Ex: Jean Tremblay, 514-5...">
+    <button class="btn btn-primary" id="btn-onboarding1">Continuer</button>
+    <p class="muted center" style="margin-top:8px;">* Champs obligatoires</p>
+  </main>`;
+}
+
+function renderOnboarding2(){
+  const f = state.onboardingForm;
+  return `
+  ${header("Créer mon entreprise","go('onboardingEtape1')")}
+  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:100%;background:var(--accent);"></div></div>
+  <main>
+    <p class="muted center">Étape 2 sur 2 — Confirmation de votre entreprise</p>
+    <div class="center" style="margin:14px 0;">
+      <div style="width:60px;height:60px;border-radius:50%;background:var(--green);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">✓</div>
+      <p style="font-weight:600;color:var(--green);">Vérifiez vos informations</p>
+      <p class="muted">Vous pourrez les modifier plus tard dans Mon entreprise</p>
+    </div>
+    <div class="card">
+      ${champIcone("immeuble","",f.nom_entreprise,{readonly:true})}
+      ${champIcone("licence","",f.numero_rbq,{readonly:true})}
+      ${champIcone("lieu","",f.adresse,{readonly:true})}
+      ${champIcone("courriel","",f.email,{readonly:true})}
+      ${champIcone("telephone","",f.contact_urgence,{readonly:true})}
+    </div>
+    <button class="btn btn-primary" id="btn-terminer-onboarding">Créer mon entreprise</button>
+  </main>`;
+}
+
+function renderAccepterInvitation(){
+  const inv = state.invitationData || {};
+  const pwdIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>`;
+  return `
+  ${header("Rejoindre l'entreprise")}
+  <main style="padding-top:14px;">
+    <div class="logo-block">
+      <img src="data:image/png;base64,${state.logoBase64}" style="width:150px;height:auto;margin:0 auto;display:block;">
+    </div>
+    <p class="muted center">Tu as été invité(e) à rejoindre <strong>${escapeHtml(inv.entreprise_nom||"l'entreprise")}</strong> en tant que <strong>${escapeHtml(inv.role||"")}</strong>.</p>
+    <label>Courriel</label>
+    <input type="text" value="${escapeHtml(inv.email||"")}" disabled>
+    <label>Choisis un mot de passe *</label>
+    <div class="pwd-wrap"><input type="password" id="ai-mdp" placeholder="Mot de passe">
+      <button type="button" class="toggle-pwd" onclick="togglePwd('ai-mdp', this)">${pwdIcon}</button></div>
+    <label>Confirme le mot de passe *</label>
+    <div class="pwd-wrap"><input type="password" id="ai-mdp2" placeholder="Confirmer le mot de passe">
+      <button type="button" class="toggle-pwd" onclick="togglePwd('ai-mdp2', this)">${pwdIcon}</button></div>
+    <button class="btn btn-primary" id="ai-confirmer" onclick="accepterInvitation()">Créer mon compte</button>
+  </main>`;
+}
+
+function dbBadge(){
+  if(state.dbStatus==="ok") return `<div class="badge-ok">✓ Enregistré dans Supabase</div>`;
+  if(state.dbStatus==="fallback") return `<div class="badge-sim">⚠ Supabase indisponible — sauvegardé localement pour ce test seulement.<br><span style="font-family:monospace;font-size:10px;">${escapeHtml(lastDbError)}</span></div>`;
+  return "";
+}
+function escapeHtml(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function formatRapportAffichage(s){ return escapeHtml(sansMarqueurs(s)).replace(/^## (.+)$/gm, '<strong style="color:var(--green)">$1</strong>'); }
+
+function attachHandlers(){
+  const b1 = document.getElementById("btn-connexion");
+  if(b1) b1.onclick = ()=>{
+    const nom = document.getElementById("acc-nom") ? document.getElementById("acc-nom").value.trim() : "";
+    const courriel = document.getElementById("acc-courriel").value.trim();
+    const mdp = document.getElementById("acc-mdp") ? document.getElementById("acc-mdp").value : "";
+    if(state.authTab==='inscription'){
+      const mdp2 = document.getElementById("acc-mdp2") ? document.getElementById("acc-mdp2").value : "";
+      if(!nom){ showToast("Le nom complet est requis."); return; }
+      if(!courriel || !courriel.includes("@")){ showToast("Un courriel valide est requis."); return; }
+      if(!mdp || mdp.length < 6){ showToast("Le mot de passe doit contenir au moins 6 caractères."); return; }
+      if(mdp !== mdp2){ showToast("Les mots de passe ne correspondent pas."); return; }
+      commencerCreationCompte(nom, courriel, mdp);
+    }else{
+      if(!courriel || !courriel.includes("@")){ showToast("Un courriel valide est requis."); return; }
+      if(!mdp){ showToast("Le mot de passe est requis."); return; }
+      seConnecter(nom, courriel, mdp);
+    }
+  };
+  const b2 = document.getElementById("btn-creer-projet");
+  if(b2) b2.onclick = ()=>{
+    const nom = document.getElementById("np-nom").value;
+    const adresse = document.getElementById("np-adresse").value;
+    const type = document.getElementById("np-type").value;
+    const desc = document.getElementById("np-desc").value;
+    if(!nom || !adresse){ showToast("Nom et adresse sont requis."); return; }
+    creerProjet(nom, adresse, type || null, desc);
+  };
+  const p = document.getElementById("rf-photos");
+  if(p) p.onchange = (e)=> ajouterPhotos(e.target.files);
+  const champIds = { titre:"rf-titre", date_rapport:"rf-date", description:"rf-description", observations:"rf-observations", actions:"rf-actions", portee:"rf-portee", visiteurs:"rf-visiteurs", epi:"rf-epi", meteo:"rf-meteo", nb_travailleurs:"rf-nb" };
+  Object.keys(champIds).forEach(k=>{
+    const elm = document.getElementById(champIds[k]);
+    if(elm){
+      elm.oninput = (e)=>{ if(k === "nb_travailleurs"){ const v = e.target.value.replace(/\D/g, "").slice(0, 3); if(v !== e.target.value) e.target.value = v; } state.rapportForm[k] = e.target.value; if(elm.tagName === "TEXTAREA") ajusterHauteur(elm); };
+      if(elm.tagName === "TEXTAREA") ajusterHauteur(elm);
+    }
+  });
+  const bg = document.getElementById("btn-generer");
+  if(bg) bg.onclick = ()=>{ if(!state.rapportForm.titre){ showToast("Le titre est requis."); return; } genererRapport(); };
+  document.querySelectorAll(".pe-par").forEach(t => { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; });
+  initialiserGlisser();
+  { const tl = document.querySelector(".pe-leg"); if(tl){ tl.focus(); tl.setSelectionRange(tl.value.length, tl.value.length); } }
+  const ba = document.getElementById("btn-approuver"); if(ba) ba.onclick = ()=>enregistrerRapport(statutCibleValidation());
+  const bbr = document.getElementById("btn-brouillon"); if(bbr) bbr.onclick = ()=>enregistrerRapport("Brouillon");
+  const br = document.getElementById("btn-regenerer"); if(br) br.onclick = regenererAvecConfirmation;
+  const baf = document.getElementById("btn-approuver-final"); if(baf) baf.onclick = ()=>enregistrerRapport(statutCibleValidation());
+  const bt = document.getElementById("btn-telecharger"); if(bt) bt.onclick = genererPDF;
+  const be = document.getElementById("btn-envoyer"); if(be) be.onclick = envoyerSimule;
+  const logoInput = document.getElementById("ob-logo-upload");
+  if(logoInput) logoInput.onchange = async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const b64 = await fileToBase64(file);
+    state.onboardingForm.logoBase64 = b64;
+    state.onboardingForm.logoMimeType = file.type;
+    state.onboardingForm.logoFichier = file;
+    render();
+  };
+  const bo1 = document.getElementById("btn-onboarding1");
+  if(bo1) bo1.onclick = ()=>{
+    const nom = document.getElementById("ob-nom").value;
+    const rbq = document.getElementById("ob-rbq").value;
+    if(!nom || !rbq){ showToast("Nom de l'entreprise et numéro RBQ sont requis."); return; }
+    state.onboardingForm = {
+      ...state.onboardingForm,
+      nom_entreprise: nom, numero_rbq: rbq,
+      adresse: document.getElementById("ob-adresse").value,
+      email: document.getElementById("ob-email").value,
+      contact_urgence: document.getElementById("ob-urgence").value
+    };
+    go("onboardingEtape2");
+  };
+  const bt3 = document.getElementById("btn-terminer-onboarding");
+  if(bt3) bt3.onclick = ()=>{ terminerOnboarding(); };
+  const logoEnt = document.getElementById("ent-logo-input");
+  if(logoEnt) logoEnt.onchange = async (ev)=>{ const f = ev.target.files[0]; ev.target.value = ""; if(f) await televerserLogoEntreprise(f); };
+  const bge = document.getElementById("btn-enregistrer-entreprise");
+  if(bge){
+    bge.onclick = enregistrerEntreprise;
+    const ids = ["ge-nom","ge-rbq","ge-adresse","ge-email","ge-urgence"];
+    const e0 = state.entreprise || {};
+    const init = { "ge-nom":e0.nom_entreprise||"", "ge-rbq":e0.numero_rbq||"", "ge-adresse":e0.adresse_siege||"", "ge-email":e0.email_facturation||"", "ge-urgence":e0.contact_urgence||"" };
+    const verifier = ()=>{
+      let change = false;
+      ids.forEach(id=>{ if(document.getElementById(id).value !== init[id]) change = true; });
+      bge.disabled = !change;
+    };
+    ids.forEach(id=>{ const inp = document.getElementById(id); if(inp) inp.addEventListener("input", ()=>{ const fi = document.getElementById("fi-"+id); if(fi) fi.classList.remove("invalide"); verifier(); }); });
+  }
+}
+
+/* ================= DÉMARRAGE ================= */
+(async function demarrer(){
+  const invite = detecterInvitation();
+  if(invite && invite.access_token){
+    history.replaceState(null, "", window.location.pathname); // nettoie le token de l'URL
+    state.accessToken = invite.access_token;
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: authHeaders() });
+    if(res.ok){
+      const u = await res.json();
+      state.authUser = u;
+      state.invitationData = {
+        email: u.email,
+        role: u.user_metadata?.role || "Employé",
+        entreprise_id: u.user_metadata?.entreprise_id || null,
+        entreprise_nom: u.user_metadata?.entreprise_nom || "",
+        invitation_id: u.user_metadata?.invitation_id || null
+      };
+      state.view = "accepterInvitation";
+      render();
+      return;
+    }else{
+      state.accessToken = null;
+      showToast("Lien d'invitation invalide ou expiré.");
+    }
+  }
+  const session = chargerSessionSauvegardee();
+  if(session && session.accessToken && session.authUser){
+    state.accessToken = session.accessToken;
+    state.authUser = session.authUser;
+    render(); // affiche un écran vide pendant la vérification
+    const test = await sbSelect("Utilisateurs", `select=id&auth_id=eq.${state.authUser.id}&limit=1`);
+    if(test !== null){
+      await chargerEspaceUtilisateur();
+      return;
+    }else{
+      effacerSession();
+      state.accessToken = null;
+      state.authUser = null;
+    }
+  }
+  render();
+})();
+</script>
+</body>
+</html>
