@@ -268,6 +268,31 @@
   .card.center .lib-fiche:first-child{margin-top:2px;}
   .fiche-nom{font-size:15px;font-weight:400;color:var(--dark);margin-top:3px;}
   .fiche-adr{font-size:15px;color:var(--dark);margin-top:3px;}
+
+  /* ---- Liste des projets ---- */
+  #app[data-vue="mesProjets"]{background:#F6F7F8;} .main-projets{background:#F6F7F8;}
+  .psum{font-size:13px;color:var(--grey);margin:0 2px 12px;}
+  .pcard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 14px 14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;position:relative;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+  .pcard:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--green);}
+  .pcard.sus:before{background:var(--jaune);} .pcard.ter:before{background:#B0BEC5;}
+  .pcard:hover{border-color:#CFD8DC;box-shadow:0 1px 6px rgba(0,0,0,.06);} .pcard:active{background:#FAFBFB;}
+  .pc-corps{min-width:0;flex:1;}
+  .pc-nom{font-size:15.5px;font-weight:500;letter-spacing:-.01em;line-height:1.3;overflow-wrap:anywhere;}
+  .pc-adr{font-size:13px;color:var(--grey);margin-top:3px;display:flex;gap:5px;align-items:flex-start;} .pc-adr svg{flex:none;margin-top:3px;} .pc-adr span{min-width:0;overflow-wrap:anywhere;}
+  .pc-meta{margin-top:7px;font-size:12px;}
+  .pdot{display:inline-flex;align-items:center;gap:5px;color:#2E7D32;font-weight:500;} .pdot:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);}
+  .pdot.sus{color:#8A6500;} .pdot.sus:before{background:var(--jaune);} .pdot.ter{color:#546E7A;} .pdot.ter:before{background:#B0BEC5;}
+  .pc-chev{flex:none;color:#9AA9B1;}
+  .psearch{background:#fff;border:1px solid var(--border);border-radius:10px;padding:0 12px;display:flex;gap:8px;align-items:center;margin-bottom:10px;color:#8fa0a9;}
+  .psearch input{border:none;outline:none;padding:11px 0;font-size:14px;background:transparent;width:100%;}
+  .pseg{display:flex;background:#E9ECEE;border-radius:10px;padding:3px;margin-bottom:6px;}
+  .pseg div{flex:1;text-align:center;padding:7px 2px;font-size:12.5px;color:var(--grey);border-radius:8px;cursor:pointer;white-space:nowrap;}
+  .pseg div.on{background:#fff;color:var(--dark);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.08);}
+  .pgrp{display:flex;align-items:center;gap:8px;margin:16px 2px 8px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--grey);font-weight:500;cursor:pointer;}
+  .pgrp .pn{background:#E3E7EA;border-radius:10px;padding:1px 8px;letter-spacing:0;}
+  .pgrp-ch{margin-left:auto;transition:transform .15s;} .pgrp-ch.ouvert{transform:rotate(90deg);}
+  .pplus{text-align:center;font-size:12.5px;color:var(--grey);margin:2px 0 6px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+  input[type=password]:not(:placeholder-shown){font-size:10px;letter-spacing:.14em;}
 </style>
 </head>
 <body>
@@ -299,6 +324,8 @@ let state = {
   liste: { projetId:null, q:'', statut:'', auteur:'', periode:'', items:[], aTraiter:[], total:0, taille:20, chargement:false, erreur:null, photos:{}, replies:{}, jeton:0 },
   resumeProjet: null,
   filtreProjets: { q:'', statut:'' },
+  projSections: { 'Actif':true, 'Suspendu':false, 'Terminé':false },
+  projTout: {},
   erreurPhotos: null,
   enregistrementEnCours: false,
   ouvertureEnCours: false,
@@ -3076,26 +3103,72 @@ function renderTableauBord(){
 }
 
 /* ================= LISTE DES PROJETS (recherche, filtre) ================= */
-function htmlListeProjets(){
+const SEUIL_SECTIONS_PROJETS = 5;
+const MAX_PAR_SECTION = 5;
+function statutProjet(p){ return p.statut_projet || "Actif"; }
+function carteProjet(p){
+  const st = statutProjet(p);
+  const cls = st === "Suspendu" ? "sus" : (st === "Terminé" ? "ter" : "");
+  return `<div class="pcard ${cls}" onclick="ouvrirProjet('${p.id}')">
+    <div class="pc-corps"><div class="pc-nom">${escapeHtml(p.nom_projet || "Sans titre")}</div>
+    ${p.adresse_projet ? `<div class="pc-adr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>${escapeHtml(p.adresse_projet)}</span></div>` : ""}
+    <div class="pc-meta"><span class="pdot ${cls}">${escapeHtml(st)}</span></div></div>
+    <svg class="pc-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </div>`;
+}
+function projetsFiltres(){
   const F = state.filtreProjets;
   const q = F.q.trim().toLowerCase();
-  const ordre = { "Actif": 0, "Suspendu": 1, "Terminé": 2 };
-  const liste = state.projets
-    .filter(p => (!F.statut || (p.statut_projet || "Actif") === F.statut))
+  return state.projets
+    .filter(p => !F.statut || statutProjet(p) === F.statut)
     .filter(p => !q || ((p.nom_projet || "") + " " + (p.adresse_projet || "")).toLowerCase().includes(q))
-    .sort((a, b) => ((ordre[a.statut_projet || "Actif"] ?? 3) - (ordre[b.statut_projet || "Actif"] ?? 3)) || (a.nom_projet || "").localeCompare(b.nom_projet || "", "fr"));
-  if(!state.projets.length) return `<p class="muted center">Aucun projet encore. Crée ton premier projet pour commencer.</p>`;
-  if(!liste.length) return `<p class="muted center">Aucun projet ne correspond.</p>`;
-  return liste.map(p => `
-    <div class="project-item" onclick="ouvrirProjet('${p.id}')">
-      <div><div class="name">${escapeHtml(p.nom_projet || "Sans titre")}</div><div class="addr">${escapeHtml(p.adresse_projet || "")}</div></div>
-      <span class="status ${p.statut_projet || 'Actif'}">${p.statut_projet || 'Actif'}</span>
-    </div>`).join("");
+    .sort((a, b) => (a.nom_projet || "").localeCompare(b.nom_projet || "", "fr"));
 }
-function filtrerProjets(cle, valeur){
-  state.filtreProjets[cle] = valeur;
+function htmlResumeListeProjets(){
+  const n = state.projets.length;
+  if(!n) return "";
+  const act = state.projets.filter(p => statutProjet(p) === "Actif").length;
+  return `${n} projet${n > 1 ? "s" : ""} · ${act} actif${act > 1 ? "s" : ""}`;
+}
+function htmlSegProjets(){
+  const c = { "": state.projets.length, "Actif":0, "Suspendu":0, "Terminé":0 };
+  state.projets.forEach(p => { c[statutProjet(p)] = (c[statutProjet(p)] || 0) + 1; });
+  return [["", "Tous"], ["Actif", "Actifs"], ["Suspendu", "Suspendus"], ["Terminé", "Terminés"]]
+    .map(([v, l]) => `<div class="${state.filtreProjets.statut === v ? "on" : ""}" onclick="filtrerProjets('statut','${v}')">${l} ${c[v] || 0}</div>`).join("");
+}
+function htmlListeProjets(){
+  if(!state.projets.length) return `<p class="muted center">Aucun projet encore. Crée ton premier projet pour commencer.</p>`;
+  const liste = projetsFiltres();
+  if(!liste.length) return `<p class="muted center">Aucun projet ne correspond.</p>`;
+  if(state.projets.length <= SEUIL_SECTIONS_PROJETS) return liste.map(carteProjet).join("");
+  const recherche = !!state.filtreProjets.q.trim();
+  let html = "";
+  [["Actif","Actifs"],["Suspendu","Suspendus"],["Terminé","Terminés"]].forEach(([st, titre]) => {
+    const items = liste.filter(p => statutProjet(p) === st);
+    if(!items.length) return;
+    const ouvert = recherche || !!state.filtreProjets.statut || state.projSections[st];
+    const tout = recherche || state.projTout[st];
+    const visibles = (ouvert && !tout) ? items.slice(0, MAX_PAR_SECTION) : items;
+    html += `<div class="pgrp" onclick="basculerSectionProjets('${st}')"><span>${titre}</span><span class="pn">${items.length}</span>
+      <svg class="pgrp-ch ${ouvert ? "ouvert" : ""}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></div>`;
+    if(ouvert){
+      html += visibles.map(carteProjet).join("");
+      if(items.length > visibles.length) html += `<div class="pplus" onclick="state.projTout['${st}']=true;filtrerProjets('x','')">+ ${items.length - visibles.length} autre${items.length - visibles.length > 1 ? "s" : ""} projet${items.length - visibles.length > 1 ? "s" : ""} · Afficher tout</div>`;
+    }
+  });
+  return html;
+}
+function basculerSectionProjets(st){
+  state.projSections[st] = !state.projSections[st];
   const el = document.getElementById("liste-projets");
   if(el) el.innerHTML = htmlListeProjets();
+}
+function filtrerProjets(cle, valeur){
+  if(cle === "q" || cle === "statut") state.filtreProjets[cle] = valeur;
+  const el = document.getElementById("liste-projets");
+  if(el) el.innerHTML = htmlListeProjets();
+  const sg = document.getElementById("seg-projets");
+  if(sg) sg.innerHTML = htmlSegProjets();
 }
 
 /* ================= RENDU ================= */
@@ -3245,21 +3318,21 @@ function renderAccueil(){
 
 function renderMesProjets(){
   const F = state.filtreProjets;
-  const filtres = state.projets.length > 5 ? `
-    <input type="text" id="filtre-projets" placeholder="Rechercher un projet (nom ou adresse)" value="${escapeHtml(F.q)}" oninput="filtrerProjets('q', this.value)">
-    <select onchange="filtrerProjets('statut', this.value)" aria-label="Filtrer par statut" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin:6px 0 10px;font-size:13px;">
-      ${[["", "Tous les statuts"], ["Actif", "Actifs"], ["Suspendu", "Suspendus"], ["Terminé", "Terminés"]].map(([v, l]) => `<option value="${v}"${F.statut === v ? " selected" : ""}>${l}</option>`).join("")}
-    </select>` : "";
+  const filtres = state.projets.length > SEUIL_SECTIONS_PROJETS ? `
+    <div class="psearch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="text" id="filtre-projets" placeholder="Rechercher un nom ou une adresse" value="${escapeHtml(F.q)}" oninput="filtrerProjets('q', this.value)"></div>
+    <div class="pseg" id="seg-projets">${htmlSegProjets()}</div>` : "";
   return `
   ${header("Mes projets", null, "ouvrirMenuProfil()")}
-  <main>
+  <main class="main-projets">
     ${dbBadge()}
     ${(()=>{
       if(!peutApprouver()) return "";
       const n = state.rapports.filter(r=>r.statut_rapport==="À approuver").length;
       return n ? `<div class="card" style="border-left:4px solid var(--suspendu);display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:13.5px;font-weight:500;">${n} rapport${n>1?"s":""} à approuver</div><button class="btn btn-warning" style="width:auto;margin:0;padding:8px 14px;" onclick="ouvrirRapportsAApprouver()">Voir</button></div>` : "";
     })()}
-    <div class="card">${filtres}<div id="liste-projets">${htmlListeProjets()}</div></div>
+    <div class="psum">${htmlResumeListeProjets()}</div>
+    ${filtres}
+    <div id="liste-projets">${htmlListeProjets()}</div>
     <button class="btn btn-primary" onclick="go('ajouterProjet')">+ Nouveau projet</button>
   </main>`;
 }
@@ -3787,7 +3860,7 @@ function renderAccepterInvitation(){
 }
 
 function dbBadge(){
-  if(state.dbStatus==="ok") return `<div class="badge-ok">✓ Enregistré dans Supabase</div>`;
+  if(state.dbStatus==="ok") return "";
   if(state.dbStatus==="fallback") return `<div class="badge-sim">⚠ Supabase indisponible — sauvegardé localement pour ce test seulement.<br><span style="font-family:monospace;font-size:10px;">${escapeHtml(lastDbError)}</span></div>`;
   return "";
 }
