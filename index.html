@@ -6,11 +6,11 @@
 <title>ChantierAI — Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
-    --green:#43A047; --dark:#37474F; --grey:#90A4AE; --accent:#FFC107; --jaune:#F5B700; --jaune-clair:#FFF4CC; --jaune-texte:#7A5A00;
+    --green:#43A047; --dark:#243039; --grey:#697B86; --accent:#FFC107; --jaune:#F5B700; --jaune-clair:#FFF4CC; --jaune-texte:#7A5A00;
     --bg:#F5F5F5; --border:#E0E0E0;
     --actif:#43A047; --suspendu:#FF9800; --refuse:#E53935; --envoye:#1E88E5;
     --text-pdf:#17181A;
@@ -59,8 +59,8 @@
   .field-with-mic textarea{padding-right:40px;}
   .carte-rapport{border:1px solid var(--border);border-left:4px solid #9AA3A8;border-radius:10px;padding:10px 12px;margin:8px 0;cursor:pointer;background:#fff;}
   .carte-rapport .cr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .carte-rapport .cr-titre{font-weight:600;min-width:0;}
-  .carte-rapport .cr-num{font-size:11.5px;font-weight:600;color:var(--grey);margin-right:6px;}
+  .carte-rapport .cr-titre{font-weight:500;min-width:0;}
+  .carte-rapport .cr-num{font-size:11.5px;font-weight:500;color:var(--grey);margin-right:6px;}
   .carte-rapport .cr-meta{font-size:12px;color:var(--grey);margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
   .toggle-pwd{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--grey);display:flex;align-items:center;padding:2px;}
   .toggle-pwd:hover{color:var(--dark);}
@@ -69,7 +69,7 @@
   .mic-btn{position:absolute;right:8px;bottom:10px;background:none;border:none;font-size:14px;cursor:pointer;color:var(--grey);display:inline-flex;align-items:center;gap:6px;padding:4px;}
   .mic-btn.recording{color:var(--refuse);animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-  .btn{display:block;width:100%;padding:13px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;text-align:center;}
+  .btn{display:block;width:100%;padding:13px;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;margin-top:14px;text-align:center;}
   .btn-primary{background:var(--green);color:#fff;}
   .btn-warning{background:var(--accent);color:var(--dark);}
   .btn-danger{background:var(--refuse);color:#fff;}
@@ -78,7 +78,7 @@
   .btn:disabled{opacity:.5;cursor:not-allowed;}
   .row{display:flex;gap:10px;}
   .row > div{flex:1;}
-  .status{font-size:12px;font-weight:600;padding:3px 8px;border-radius:5px;color:#fff;display:inline-block;}
+  .status{font-size:12px;font-weight:500;padding:3px 8px;border-radius:5px;color:#fff;display:inline-block;}
   .status.Actif{background:var(--actif);} .status.Suspendu{background:var(--suspendu);}
   .status.Refusé{background:var(--refuse);} .status.Terminé{background:#757575;} .status.Brouillon{background:#757575;} .status.AApprouver{background:var(--jaune);color:#3B2F00;} .status.Envoyé{background:var(--envoye);}
   .project-item{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
@@ -87,7 +87,7 @@
   .photo-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
   .photo-thumbs img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);}
   .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:14px;}
-  .tab{flex:1;text-align:center;padding:10px;cursor:pointer;color:var(--grey);font-weight:600;}
+  .tab{flex:1;text-align:center;padding:10px;cursor:pointer;color:var(--grey);font-weight:500;}
   .tab.active{color:var(--dark);border-bottom:2px solid var(--green);margin-bottom:-2px;}
   .center{text-align:center;}
   .muted{color:var(--grey);font-size:13px;}
@@ -113,16 +113,16 @@
   .field-icon input{outline:none;background:transparent;font-size:15px;}
   .field-icon.invalide{border-color:var(--refuse);box-shadow:0 0 0 3px rgba(229,57,53,.12);}
   .ent-hero{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--border);border-top:4px solid var(--jaune);color:var(--dark);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-  .ent-avatar{width:76px;height:76px;border-radius:16px;background:var(--jaune-clair);border:1px solid #F1DC9A;color:var(--jaune-texte);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;letter-spacing:1px;overflow:hidden;flex:none;}
+  .ent-avatar{width:76px;height:76px;border-radius:16px;background:var(--jaune-clair);border:1px solid #F1DC9A;color:var(--jaune-texte);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:500;letter-spacing:1px;overflow:hidden;flex:none;}
   .ent-avatar.logo{background:#fff;border-color:var(--border);padding:6px;} .ent-avatar img{width:100%;height:100%;object-fit:contain;}
-  .ent-nom{font-size:19px;font-weight:600;line-height:1.2;word-break:break-word;color:var(--dark);}
+  .ent-nom{font-size:19px;font-weight:500;line-height:1.2;word-break:break-word;color:var(--dark);}
   .ent-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
   .ent-pill{background:#F1F4F6;color:#546E7A;border-radius:999px;padding:3px 10px;font-size:11.5px;}
   .ent-logo-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;align-items:center;}
   .ent-logo-actions .lien{font-size:12.5px;color:var(--dark);text-decoration:underline;text-underline-offset:3px;cursor:pointer;background:none;border:none;padding:0;font-family:inherit;} .ent-logo-actions .lien.danger{color:var(--refuse);}
-  .sec-titre{font-size:11.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--grey);margin:20px 4px 8px;}
+  .sec-titre{font-size:11.5px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--grey);margin:20px 4px 8px;}
   .card-pro{background:#fff;border:1px solid var(--border);border-radius:14px;padding:6px 14px 14px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-  .card-pro label{font-size:12px;font-weight:600;color:var(--dark);margin-top:12px;display:block;}
+  .card-pro label{font-size:12px;font-weight:500;color:var(--dark);margin-top:12px;display:block;}
   .card-pro .field-icon{margin-top:6px;}
   .aide-champ{font-size:11.5px;color:var(--grey);margin:4px 2px 0;}
   .aide-champ.erreur{color:var(--refuse);}
@@ -132,25 +132,25 @@
   .interrupteur .piste::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s;}
   .interrupteur input:checked + .piste{background:var(--green);}
   .interrupteur input:checked + .piste::after{transform:translateX(20px);}
-  .pastille{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;}
+  .pastille{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;}
   .pastille.role{background:#E8F5E9;color:#2E7D32;}
   .pastille.off{background:#ECEFF1;color:#546E7A;}
   .pastille.attente{background:#FFF3CD;color:#7A5B00;}
   .ligne-pro{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
   .ligne-pro:last-child{border-bottom:none;}
-  .avatar-m{width:42px;height:42px;border-radius:50%;color:#fff;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none;}
-  .nom-m{font-size:14.5px;font-weight:600;color:var(--dark);word-break:break-word;}
+  .avatar-m{width:42px;height:42px;border-radius:50%;color:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .nom-m{font-size:14.5px;font-weight:500;color:var(--dark);word-break:break-word;}
   .btn-menu{background:#F5F7F8;border:1px solid var(--border);color:var(--dark);width:36px;height:36px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;padding:0;}
   .btn-menu:hover{background:#ECEFF1;}
   .vide-pro{color:var(--grey);font-size:13px;text-align:center;padding:18px 8px;}
   .puces{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
   .puce{border:1px solid var(--border);background:#fff;color:var(--dark);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer;}
-  .puce.actif{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
+  .puce.actif{background:var(--green);border-color:var(--green);color:#fff;font-weight:500;}
   .sheet .item-menu{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;margin-top:8px;cursor:pointer;}
-  .sheet .item-menu.actif{border-color:var(--green);background:#E8F5E9;font-weight:600;}
+  .sheet .item-menu.actif{border-color:var(--green);background:#E8F5E9;font-weight:500;}
   .sheet .item-menu.danger{color:var(--refuse);}
   .page-edit{background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:16px 14px;margin:8px 0 12px;}
-  .pe-titre{font-weight:600;color:var(--green);font-size:14px;margin:14px 0 4px;}
+  .pe-titre{font-weight:500;color:var(--green);font-size:14px;margin:14px 0 4px;}
   .pe-titre:first-child{margin-top:0;}
   .pe-par{width:100%;border:1px solid transparent;background:transparent;resize:none;overflow:hidden;font:inherit;font-size:13.5px;line-height:1.5;padding:4px 6px;margin:2px -6px;border-radius:4px;box-sizing:border-box;width:calc(100% + 12px);display:block;min-height:0;}
   .pe-par:hover{background:#F6F8F9;}
@@ -185,17 +185,17 @@
   .sheet .btn{margin-top:10px;}
   .list-item{padding:12px 0;border-bottom:1px solid var(--border);}
   .list-item:last-child{border-bottom:none;}
-  .list-item .t{font-weight:600;} .list-item .d{font-size:12px;color:var(--grey);}
+  .list-item .t{font-weight:500;} .list-item .d{font-size:12px;color:var(--grey);}
   input[type=date]{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--dark);}
-  .chip-s{flex:none;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:12px;color:#fff;}
+  .chip-s{flex:none;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:12px;color:#fff;}
   .chip-s.s-ouv{background:var(--refuse);} .chip-s.s-cours{background:var(--jaune);color:#3B2F00;} .chip-s.s-res{background:var(--actif);}
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;}
   .kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;}
-  .kpi-v{font-size:24px;font-weight:600;color:var(--dark);line-height:1.1;} .kpi-v.ok{color:var(--actif);} .kpi-v.alerte{color:var(--refuse);}
+  .kpi-v{font-size:24px;font-weight:500;color:var(--dark);line-height:1.1;} .kpi-v.ok{color:var(--actif);} .kpi-v.alerte{color:var(--refuse);}
   .kpi-l{font-size:11.5px;color:var(--grey);margin-top:2px;}
   .dash-grille{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);} .dash-carte{margin-bottom:0;min-width:0;overflow:hidden;} .dash-carte svg{display:block;width:100%;max-height:230px;height:auto;}
   .dash-aide{font-size:12px;color:var(--grey);margin:-4px 0 8px;line-height:1.4;} .kpi-a{font-size:10.5px;color:var(--grey);margin-top:4px;line-height:1.3;}
-  .dash-titre{font-weight:600;font-size:13.5px;margin-bottom:8px;}
+  .dash-titre{font-weight:500;font-size:13.5px;margin-bottom:8px;}
   .legende{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--grey);margin-top:4px;} .legende i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;}
   .galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;} .galerie figure{margin:0;cursor:pointer;} .galerie img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;display:block;} .galerie figcaption{font-size:10.5px;color:var(--grey);text-align:center;margin-top:2px;}
   .frise{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer;} .frise-pt{flex:none;width:10px;height:10px;border-radius:50%;background:var(--actif);margin-top:5px;}
@@ -204,10 +204,10 @@
   body.paysage .dash-grille .pleine{grid-column:1/-1;}
   .proj-carte{background:#fff;border:1px solid var(--border);border-left:4px solid var(--actif);border-radius:12px 12px 0 0;padding:16px 16px 14px;}
   .proj-carte.Suspendu{border-left-color:var(--suspendu);} .proj-carte.Terminé{border-left-color:#90A4AE;}
-  .proj-nom{font-size:19px;font-weight:600;line-height:1.25;color:var(--dark);overflow-wrap:anywhere;}
+  .proj-nom{font-size:19px;font-weight:500;line-height:1.25;color:var(--dark);overflow-wrap:anywhere;}
   .proj-adr{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--grey);margin:6px 0 12px;overflow-wrap:anywhere;} .proj-adr svg{flex:none;margin-top:2px;}
   .proj-ligne{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-  .proj-statut{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;padding:3px 10px;border-radius:12px;background:#E8F5E9;color:#2E7D32;}
+  .proj-statut{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.4px;text-transform:uppercase;padding:3px 10px;border-radius:12px;background:#E8F5E9;color:#2E7D32;}
   .proj-statut.Suspendu{background:#FFF3E0;color:#E65100;} .proj-statut.Terminé{background:#ECEFF1;color:#546E7A;}
   .proj-lien{background:none;border:none;color:var(--grey);font-size:12.5px;font-family:inherit;cursor:pointer;padding:4px 0;text-decoration:underline;text-underline-offset:3px;}
   .proj-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:12px;}
@@ -219,24 +219,24 @@
   .tuile:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-1px);}
   .tuile .t-ico{flex:none;width:44px;height:44px;border-radius:11px;background:#F1F4F6;color:#546E7A;display:grid;place-items:center;}
   .tuile .t-fl{margin-left:auto;flex:none;color:#B0BEC5;line-height:0;}
-  .tuile .t-nom{display:block;font-weight:600;font-size:15px;} .tuile .t-desc{display:block;font-size:12.5px;color:var(--grey);margin-top:1px;}
+  .tuile .t-nom{display:block;font-weight:500;font-size:15px;} .tuile .t-desc{display:block;font-size:12.5px;color:var(--grey);margin-top:1px;}
   .tuile.principale{background:var(--actif);border-color:var(--actif);color:#fff;} .tuile.principale .t-ico{background:rgba(255,255,255,.2);color:#fff;} .tuile.principale .t-desc{color:rgba(255,255,255,.85);}
-  .t-badge{margin-left:auto;flex:none;background:var(--refuse);color:#fff;border-radius:11px;font-size:12px;font-weight:600;padding:2px 9px;}
+  .t-badge{margin-left:auto;flex:none;background:var(--refuse);color:#fff;border-radius:11px;font-size:12px;font-weight:500;padding:2px 9px;}
   .kpis3{grid-template-columns:repeat(3,minmax(0,1fr));} .kpis3 .kpi{padding:10px 4px;} .kpis3 .kpi-v{font-size:21px;} .kpis3 .kpi-l{font-size:11px;}
-  .dash-hero{margin:2px 0 12px;} .dash-nom{font-size:17px;font-weight:600;color:var(--dark);line-height:1.25;}
+  .dash-hero{margin:2px 0 12px;} .dash-nom{font-size:17px;font-weight:500;color:var(--dark);line-height:1.25;}
   .kpi-gros{padding:14px 6px;box-shadow:0 1px 2px rgba(0,0,0,.04);} .kpi-gros .kpi-v{font-size:26px;}
   .kpis-pro{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   .kpi-pro{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
   .kpi-ico{flex:none;width:34px;height:34px;border-radius:50%;background:var(--jaune-clair);color:var(--jaune-texte);display:flex;align-items:center;justify-content:center;}
-  .kpi-pro .kpi-v{font-size:24px;font-weight:600;color:var(--dark);line-height:1.05;} .kpi-pro .kpi-l{font-size:12.5px;font-weight:600;color:var(--dark);margin-top:3px;} .kpi-pro .kpi-s{font-size:11px;color:var(--grey);margin-top:1px;line-height:1.3;}
+  .kpi-pro .kpi-v{font-size:24px;font-weight:500;color:var(--dark);line-height:1.05;} .kpi-pro .kpi-l{font-size:12.5px;font-weight:500;color:var(--dark);margin-top:3px;} .kpi-pro .kpi-s{font-size:11px;color:var(--grey);margin-top:1px;line-height:1.3;}
   .kpi-txt{min-width:0;}
   body.paysage .kpis-pro{grid-template-columns:repeat(4,minmax(0,1fr));}
   .dash-sous{font-size:12px;color:var(--grey);margin:-5px 0 10px;line-height:1.4;}
   .jours-bande{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(78px,1fr);gap:8px;overflow-x:auto;padding-bottom:4px;}
   .jour-col{text-align:center;border:1px solid var(--border);border-radius:12px;padding:10px 4px 8px;background:#FAFBFC;display:flex;flex-direction:column;align-items:center;}
-  .jour-sem{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);font-weight:600;} .jour-date{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:6px;}
-  .jour-ico{line-height:0;margin:2px 0 4px;} .jour-temp{font-weight:600;font-size:16px;color:var(--dark);} .jour-cond{font-size:11px;color:var(--grey);line-height:1.25;min-height:28px;margin-top:1px;}
-  .jour-nb{margin-top:8px;padding:4px 10px;border-radius:14px;background:var(--jaune-clair);color:var(--jaune-texte);font-weight:600;font-size:13.5px;display:inline-flex;gap:5px;align-items:center;}
+  .jour-sem{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);font-weight:500;} .jour-date{font-size:13px;font-weight:500;color:var(--dark);margin-bottom:6px;}
+  .jour-ico{line-height:0;margin:2px 0 4px;} .jour-temp{font-weight:500;font-size:16px;color:var(--dark);} .jour-cond{font-size:11px;color:var(--grey);line-height:1.25;min-height:28px;margin-top:1px;}
+  .jour-nb{margin-top:8px;padding:4px 10px;border-radius:14px;background:var(--jaune-clair);color:var(--jaune-texte);font-weight:500;font-size:13.5px;display:inline-flex;gap:5px;align-items:center;}
   .chip-s.s-gris{background:var(--grey);}
   .infobulle{position:fixed;display:none;z-index:2000;max-width:230px;background:#263238;color:#fff;font-size:12.5px;line-height:1.45;padding:8px 11px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:pre-line;pointer-events:none;}
   [data-tip]{cursor:default;} .kpi-pro[data-tip]{cursor:help;transition:box-shadow .15s,border-color .15s;} .kpi-pro[data-tip]:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);border-color:#F1DC9A;}
@@ -246,8 +246,28 @@
   .jour-col{cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;} .jour-col:hover,.jour-col:focus-visible{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.1);border-color:#F1DC9A;outline:none;}
   @media (prefers-reduced-motion:reduce){.anim .bar{animation:none;}.jour-col{transition:none;}}
   .kpis4{grid-template-columns:repeat(4,minmax(0,1fr));} .kpis4 .kpi{padding:10px 4px;} .kpis4 .kpi-v{font-size:21px;} .kpis4 .kpi-l{font-size:11px;}
-  .titre-section{font-weight:600;margin:16px 0 4px;}
+  .titre-section{font-weight:500;margin:16px 0 4px;}
   .lien{background:none;border:none;color:var(--grey);text-decoration:underline;font-size:13px;cursor:pointer;font-family:inherit;}
+
+  /* ---- Typographie : deux graisses (400, 500), contraste net, hiérarchie claire ---- */
+  body{font-size:15px;line-height:1.5;letter-spacing:-.003em;font-feature-settings:"cv11","ss03";}
+  header h1{font-size:17px;font-weight:500;letter-spacing:-.012em;}
+  .muted{color:var(--grey);}
+  h2,h3,h4{font-weight:500;letter-spacing:-.012em;color:var(--dark);}
+  label{font-size:12.5px;font-weight:500;color:var(--dark);}
+  .project-item .name,.list-item .t{font-size:16px;font-weight:500;letter-spacing:-.01em;line-height:1.3;}
+  .project-item .addr,.list-item .d{font-size:13px;color:var(--grey);margin-top:2px;}
+  .proj-nom{font-size:20px;font-weight:500;letter-spacing:-.018em;line-height:1.25;}
+  .proj-stat .v{font-weight:500;}
+  .proj-stat .l,.tuile .t-desc,.kpi-pro .kpi-s{color:var(--grey);}
+  .tuile .t-nom{font-weight:500;font-size:15.5px;letter-spacing:-.008em;}
+  .status,.proj-statut,.pastille,.chip-s{font-weight:500;letter-spacing:.02em;}
+  .btn{font-weight:500;letter-spacing:.005em;}
+  .sec-titre{font-weight:500;letter-spacing:.08em;}
+  .card.center .lib-fiche{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey);margin-top:14px;}
+  .card.center .lib-fiche:first-child{margin-top:2px;}
+  .fiche-nom{font-size:15px;font-weight:400;color:var(--dark);margin-top:3px;}
+  .fiche-adr{font-size:15px;color:var(--dark);margin-top:3px;}
 </style>
 </head>
 <body>
@@ -876,6 +896,8 @@ async function accepterInvitation(){
   const mdp2 = p2.value;
   if(!mdp || mdp.length < 6){ showToast("Le mot de passe doit contenir au moins 6 caractères."); return; }
   if(mdp !== mdp2){ showToast("Les mots de passe ne correspondent pas."); return; }
+  const caseCgu = document.getElementById("ai-cgu");
+  if(!caseCgu || !caseCgu.checked){ showToast("Pour créer ton compte, coche la case d'acceptation des conditions d'utilisation et de la politique de confidentialité."); return; }
   if(btnEl){ btnEl.disabled = true; btnEl.textContent = "Création en cours..."; }
   try{
     // 1) Définit le mot de passe du compte invité
@@ -895,7 +917,8 @@ async function accepterInvitation(){
     const inv = state.invitationData;
     const inserted = await sbInsert("Utilisateurs", {
       nom: inv.email, email: inv.email, role: inv.role, actif: true,
-      auth_id: state.authUser.id, entreprise_id: inv.entreprise_id
+      auth_id: state.authUser.id, entreprise_id: inv.entreprise_id,
+      cgu_acceptees_le: new Date().toISOString(), cgu_version: CGU_VERSION
     });
     if(!inserted || !inserted[0]){
       showToast("Erreur: le profil n'a pas pu être enregistré dans Supabase (" + lastDbError + "). L'inscription est bloquée, réessaie.");
@@ -947,6 +970,62 @@ async function seConnecter(nom, courriel, mdp){
   await chargerEspaceUtilisateur();
 }
 
+
+/* ---- Textes légaux du pilote (modifier ici les champs entre crochets) ---- */
+const CGU_VERSION = "2026-10-pilote-1";
+const TEXTES_LEGAUX = {
+  conditions: { titre:"Conditions d'utilisation du pilote", html:`
+<p>Ces conditions encadrent l'essai gratuit de ChantierAI par votre entreprise. En créant un compte, vous les acceptez au nom de l'entreprise.</p>
+<h4>1. Objet et statut de pilote</h4>
+<p>ChantierAI est une application qui aide les entreprises de construction à rédiger, approuver et envoyer leurs rapports journaliers de chantier, avec l'aide d'une intelligence artificielle.</p>
+<p>Le service est offert en version pilote. Il peut changer, être interrompu ou contenir des erreurs. En échange, l'entreprise s'engage à donner son avis sur le service, de bonne foi.</p>
+<ul><li>Exploitant du service : [à compléter : nom légal et adresse de l'exploitant]</li><li>Responsable de la protection des renseignements personnels : [à compléter : nom et courriel]</li><li>Prix pendant le pilote : [à confirmer : gratuit]</li></ul>
+<h4>2. Comptes et responsabilités de l'entreprise</h4>
+<p>L'administrateur de l'entreprise crée les comptes de ses membres et choisit leurs rôles. L'entreprise est responsable de l'usage que font ses utilisateurs du service.</p>
+<ul><li>Chaque personne utilise son propre compte et garde son mot de passe confidentiel.</li><li>L'entreprise inscrit seulement des renseignements exacts et utiles au rapport de chantier.</li><li>L'entreprise avise les personnes visibles sur les photos et obtient leur accord quand la loi l'exige.</li><li>L'entreprise n'utilise pas le service pour un contenu illégal ou qui ne concerne pas ses chantiers.</li></ul>
+<h4>3. Contenu de l'entreprise (rapports et photos)</h4>
+<p>Les rapports, les photos et les autres renseignements saisis restent la propriété de l'entreprise. ChantierAI ne les utilise que pour fournir le service.</p>
+<p>L'entreprise donne à l'exploitant le droit de les héberger, de les afficher à ses membres et de les transmettre au service d'intelligence artificielle et au service de courriel pour produire et envoyer ses rapports. L'exploitant n'utilise pas ce contenu pour entraîner un modèle d'intelligence artificielle.</p>
+<h4>4. Rédaction assistée par l'intelligence artificielle</h4>
+<p>Le texte d'un rapport est rédigé par une intelligence artificielle à partir de ce que l'équipe a saisi et des photos. Il peut contenir des erreurs ou des oublis.</p>
+<ul><li>Une personne de l'entreprise doit relire chaque rapport et le corriger avant de l'approuver ou de l'envoyer.</li><li>Le rapport approuvé engage l'entreprise, pas l'exploitant du service.</li><li>Les observations tirées des photos ne remplacent pas une vérification professionnelle sur place.</li><li>ChantierAI n'est pas un avis d'ingénierie, de conformité, de sécurité ou juridique.</li></ul>
+<h4>5. Disponibilité, limites d'utilisation et responsabilité</h4>
+<p>Pendant le pilote, aucune disponibilité n'est garantie : le service peut être interrompu pour des correctifs ou des pannes. L'entreprise garde une copie de ses rapports importants.</p>
+<p>Pour contrôler les coûts, le nombre de rédactions par intelligence artificielle est limité pour chaque entreprise (par jour et par mois). L'exploitant peut modifier ces limites.</p>
+<p>Dans la mesure permise par la loi, la responsabilité de l'exploitant est limitée aux dommages directs et ne peut dépasser les sommes payées par l'entreprise pour le service pendant les 12 derniers mois. Pendant un pilote gratuit, aucun dommage indirect (perte de profit, de contrat ou de données) n'est couvert. [à faire valider par un avocat]</p>
+<h4>6. Fin du pilote, données et droit applicable</h4>
+<p>Chaque partie peut mettre fin au pilote en tout temps, par courriel, avec un préavis de 7 jours. À la fin du pilote, l'entreprise peut demander l'exportation de ses rapports et de ses photos. Sur demande écrite, ses données sont supprimées dans les 30 jours.</p>
+<p>Les renseignements personnels sont traités selon la politique de confidentialité de ChantierAI.</p>
+<p>Ces conditions sont régies par les lois du Québec. Tout litige relève des tribunaux du district judiciaire de [à compléter]. Les parties ont exigé que ces conditions soient rédigées en français.</p>` },
+  confidentialite: { titre:"Politique de confidentialité du pilote", html:`
+<p>ChantierAI recueille seulement les renseignements nécessaires pour produire et envoyer des rapports de chantier. Cette politique explique lesquels, pourquoi, et comment les faire corriger ou supprimer.</p>
+<h4>1. Qui est responsable et quels renseignements sont recueillis</h4>
+<p>L'exploitant de ChantierAI est responsable des renseignements personnels recueillis par le service : [à compléter : nom légal et adresse]. La personne responsable de leur protection est [à compléter : nom], joignable à [à compléter : courriel].</p>
+<ul><li>Compte : nom, courriel, rôle. Visible par les membres de la même entreprise.</li><li>Entreprise : nom, numéro RBQ, adresse, logo, contact d'urgence. Visible par les membres de la même entreprise.</li><li>Rapports : description des travaux, observations, météo, nombre de travailleurs, visiteurs. Visibles par les membres de l'entreprise, selon leur rôle.</li><li>Photos : photos de chantier, qui peuvent montrer des personnes. Visibles par les membres de l'entreprise, selon leur rôle.</li><li>Courriels envoyés : adresse du destinataire du rapport. Visible par l'entreprise.</li></ul>
+<h4>2. Pourquoi ces renseignements sont utilisés et avec qui ils sont partagés</h4>
+<p>Les renseignements servent uniquement à fournir le service : ouvrir un compte, rédiger les rapports, les approuver, les envoyer et en conserver l'historique. Ils ne sont jamais vendus et ne servent pas à la publicité.</p>
+<p>Pour fournir le service, ChantierAI fait appel à des prestataires. Certains sont situés hors du Québec, ce qui est signalé à l'entreprise avant l'inscription.</p>
+<ul><li>Supabase : hébergement de la base de données, des comptes et des photos. Tous les renseignements du service (région : [à confirmer]).</li><li>OpenAI : rédaction du texte des rapports par intelligence artificielle. Le texte saisi pour le rapport et les photos du rapport.</li><li>Resend : envoi des rapports par courriel. Adresse du destinataire et rapport en PDF.</li><li>Google Fonts : affichage de la police de caractères. Adresse IP de la personne qui ouvre l'application.</li></ul>
+<h4>3. Conservation, sécurité et hébergement</h4>
+<p>Les renseignements sont conservés tant que l'entreprise utilise le service, puis supprimés dans les 30 jours suivant sa demande de fermeture. Un rapport approuvé est conservé tel quel jusqu'à cette suppression.</p>
+<ul><li>Les données de chaque entreprise sont séparées : une entreprise ne peut pas voir celles d'une autre.</li><li>L'accès se fait par un compte personnel et un mot de passe.</li><li>Les photos sont dans un espace de stockage privé, accessible seulement aux membres de l'entreprise.</li><li>Aucun système n'est infaillible : l'exploitant avise l'entreprise, sans délai, d'un incident de confidentialité qui présente un risque de préjudice sérieux.</li></ul>
+<h4>4. Vos droits et comment les exercer</h4>
+<p>Toute personne dont les renseignements sont dans ChantierAI peut demander d'y accéder, de les faire corriger ou de les faire supprimer, en écrivant à la personne responsable indiquée plus haut. L'exploitant répond dans un délai de 30 jours.</p>
+<p>L'entreprise qui inscrit des personnes sur ses photos ou dans ses rapports doit les en informer. Une personne qui estime que ses renseignements ne sont pas bien protégés peut aussi s'adresser à la Commission d'accès à l'information du Québec.</p>` }
+};
+function ouvrirTexteLegal(cle){
+  const t = TEXTES_LEGAUX[cle]; if(!t) return;
+  fermerTexteLegal();
+  const ov = document.createElement("div");
+  ov.id = "overlay-legal"; ov.className = "sheet-overlay";
+  ov.innerHTML = `<div class="sheet" style="max-height:82vh;overflow:auto;text-align:left;font-size:14px;line-height:1.5;">
+    <h3 style="margin:0 0 8px;font-weight:500;">${escapeHtml(t.titre)}</h3>${t.html}
+    <button class="btn btn-primary" style="margin-top:12px;" onclick="fermerTexteLegal()">Fermer</button></div>`;
+  ov.onclick = (e)=>{ if(e.target===ov) fermerTexteLegal(); };
+  document.body.appendChild(ov);
+}
+function fermerTexteLegal(){ const o = document.getElementById("overlay-legal"); if(o) o.remove(); }
+
 async function commencerCreationCompte(nom, courriel, mdp){
   const result = await sbSignUp(courriel, mdp);
   if(result.error){ showToast("Inscription échouée: " + result.error); return; }
@@ -965,7 +1044,7 @@ async function commencerCreationCompte(nom, courriel, mdp){
   }
   sauvegarderSession();
   state.onboardingForm = { nom_entreprise:"", numero_rbq:"", adresse:"", email: courriel||"", contact_urgence:"", logoBase64:null, logoMimeType:null };
-  const inserted = await sbInsert("Utilisateurs", { nom: nom, email: courriel, role:"Administrateur", actif:true, auth_id: state.authUser?.id });
+  const inserted = await sbInsert("Utilisateurs", { nom: nom, email: courriel, role:"Administrateur", actif:true, auth_id: state.authUser?.id, cgu_acceptees_le: new Date().toISOString(), cgu_version: CGU_VERSION });
   const profil = inserted && inserted[0];
   if(!profil){
     showToast("Attention: profil utilisateur non enregistré dans Supabase (" + lastDbError + "). L'onboarding va continuer mais certaines actions échoueront.");
@@ -1163,8 +1242,8 @@ function htmlAlerteControleIA(){
   if(state.rapportEnEdition || !state.contenuGenere) return "";
   const v = state.verificationIA;
   const carte = txt => `<div class="card" style="border-left:4px solid var(--refuse);font-size:13px;">${txt}</div>`;
-  if(!v || v.version !== "v9"){
-    return estAdmin() ? carte("⚠ <strong>La fonction IA du serveur n'est pas à jour</strong> (version " + escapeHtml(v && v.version ? v.version : "ancienne") + "). Le contrôle automatique des chiffres, des heures et des explications ajoutées n'est pas actif. Redéploie la fonction <em>generer-rapport-ia</em> (v9) dans Supabase.") : "";
+  if(!v || v.version !== "v10"){
+    return estAdmin() ? carte("⚠ <strong>La fonction IA du serveur n'est pas à jour</strong> (version " + escapeHtml(v && v.version ? v.version : "ancienne") + "). Le contrôle automatique des chiffres, des heures et des explications ajoutées n'est pas actif. Redéploie la fonction <em>generer-rapport-ia</em> (v10) dans Supabase.") : "";
   }
   if(v.relecture_echec) return carte("⚠ <strong>La relecture automatique n'a pas pu se faire.</strong> Relis bien les chiffres, les heures et les explications avant d'approuver.");
   if(v.reinjectes && v.reinjectes.length) return `<div class="card" style="font-size:13px;color:var(--muted);">Phrases reprises telles quelles de ta saisie, car l'IA les avait oubliées : ${v.reinjectes.map(x=>escapeHtml(typeof x==="string"?x:(x.label||""))).join(" ; ")}.</div>`;
@@ -2050,7 +2129,7 @@ function htmlPhotosBloc(items, edition){
 }
 function htmlRapportComplet(){
   return construireMiseEnPage().map(b => {
-    if(b.type === "titre") return `<div style="font-weight:600;color:var(--green);margin-top:14px;">${escapeHtml(b.texte)}</div>`;
+    if(b.type === "titre") return `<div style="font-weight:500;color:var(--green);margin-top:14px;">${escapeHtml(b.texte)}</div>`;
     if(b.type === "texte") return `<div style="white-space:pre-wrap;margin:4px 0;">${escapeHtml(b.texte)}</div>`;
     return htmlPhotosBloc(b.items);
   }).join("");
@@ -2698,7 +2777,7 @@ function htmlResultatsListe(){
   let html = "";
   const actifs = filtresListeActifs(L);
   if(L.aTraiter.length){
-    html += `<div style="font-weight:600;color:#7A5B00;margin:10px 0 2px;">À traiter (${L.aTraiter.length})</div>` + L.aTraiter.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
+    html += `<div style="font-weight:500;color:#7A5B00;margin:10px 0 2px;">À traiter (${L.aTraiter.length})</div>` + L.aTraiter.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
   }
   const nbTotal = L.total + L.aTraiter.length;
   html += `<div class="muted" style="font-size:12px;margin:12px 0 2px;">${nbTotal} rapport${nbTotal > 1 ? "s" : ""}${actifs ? " (filtres actifs)" : ""}</div>`;
@@ -2714,7 +2793,7 @@ function htmlResultatsListe(){
   });
   groupes.forEach(g => {
     const ferme = !!L.replies[g.cle];
-    html += `<div onclick="basculerMois('${g.cle}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-top:14px;padding:6px 0;border-bottom:2px solid var(--border);"><span>${escapeHtml(g.libelle)} <span class="muted" style="font-weight:400;">(${g.rapports.length})</span></span><span>${ferme ? "▸" : "▾"}</span></div>`;
+    html += `<div onclick="basculerMois('${g.cle}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:500;margin-top:14px;padding:6px 0;border-bottom:2px solid var(--border);"><span>${escapeHtml(g.libelle)} <span class="muted" style="font-weight:400;">(${g.rapports.length})</span></span><span>${ferme ? "▸" : "▾"}</span></div>`;
     if(!ferme) html += g.rapports.map(r => htmlLigneRapport(r, L.photos[r.id])).join("");
   });
   if(L.items.length < L.total){
@@ -2793,7 +2872,7 @@ function dateCourte(iso){
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
   return m ? `${m[3]}/${m[2]}` : "";
 }
-const COUL = { vert: "#43A047", gris: "#90A4AE", bleu: "#1E88E5", texte: "#37474F" };
+const COUL = { vert: "#43A047", gris: "#90A4AE", bleu: "#1E88E5", texte: "#243039" };
 
 /* ---- Retour vers le tableau de bord après l'ouverture d'un rapport ---- */
 function retourVers(fallback){ return state.retour ? "allerRetour()" : fallback; }
@@ -2867,10 +2946,10 @@ function svgBarres(items, couleur, moyenne){
       const x = g + i * grp + (grp - bw) / 2;
       return `<g class="bar-g" data-tip="${escapeHtml(it.tip || "")}"><rect class="bar-hit" x="${g + i * grp}" y="${haut - 14}" width="${grp}" height="${bas - haut + 14}" fill="transparent"/>`
         + `<rect class="bar" x="${x}" y="${Y(it.v)}" width="${bw}" height="${Math.max(0, Y(0) - Y(it.v))}" rx="4" fill="${couleur}" style="animation-delay:${i * 60}ms"/>`
-        + `<text x="${x + bw / 2}" y="${Y(it.v) - 6}" text-anchor="middle" font-size="11.5" font-weight="600" fill="${COUL.texte}">${it.v}</text>`
+        + `<text x="${x + bw / 2}" y="${Y(it.v) - 6}" text-anchor="middle" font-size="11.5" font-weight="500" fill="${COUL.texte}">${it.v}</text>`
         + `<text x="${g + i * grp + grp / 2}" y="${H - 10}" text-anchor="middle" font-size="10" fill="${COUL.gris}">${escapeHtml(it.l)}</text></g>`;
     }).join("")}
-    ${moy ? `<line x1="${g}" y1="${Y(moy)}" x2="${W - d}" y2="${Y(moy)}" stroke="#F5B700" stroke-width="1.8" stroke-dasharray="5 4"/><text x="${W - d + 6}" y="${Y(moy) - 1}" font-size="10" fill="#7A5A00">Moyenne</text><text x="${W - d + 6}" y="${Y(moy) + 13}" font-size="13" font-weight="600" fill="#7A5A00">${String(Math.round(moy * 10) / 10).replace(".", ",")}</text>` : ""}
+    ${moy ? `<line x1="${g}" y1="${Y(moy)}" x2="${W - d}" y2="${Y(moy)}" stroke="#F5B700" stroke-width="1.8" stroke-dasharray="5 4"/><text x="${W - d + 6}" y="${Y(moy) - 1}" font-size="10" fill="#7A5A00">Moyenne</text><text x="${W - d + 6}" y="${Y(moy) + 13}" font-size="13" font-weight="500" fill="#7A5A00">${String(Math.round(moy * 10) / 10).replace(".", ",")}</text>` : ""}
   </svg>`;
 }
 const ICO_METEO = {
@@ -2953,7 +3032,7 @@ function rapportsDash(){
 function renderTableauBord(){
   const entete = header("Tableau de bord", "go('detailProjet')");
   if(state.dashErreur){
-    return `${entete}<main><div class="card" style="border-left:4px solid var(--refuse);"><div style="font-weight:600;color:var(--refuse);">Le tableau de bord n'a pas pu être chargé</div><div style="font-size:13px;margin-top:6px;">${escapeHtml(state.dashErreur)}</div><button class="btn btn-outline" style="margin-top:10px;" onclick="ouvrirTableauBord()">Réessayer</button></div></main>`;
+    return `${entete}<main><div class="card" style="border-left:4px solid var(--refuse);"><div style="font-weight:500;color:var(--refuse);">Le tableau de bord n'a pas pu être chargé</div><div style="font-size:13px;margin-top:6px;">${escapeHtml(state.dashErreur)}</div><button class="btn btn-outline" style="margin-top:10px;" onclick="ouvrirTableauBord()">Réessayer</button></div></main>`;
   }
   if(!dashPret()) return `${entete}<main><p class="muted center"><span class="spinner"></span>Chargement du tableau de bord...</p></main>`;
   const p = projetCourant() || {};
@@ -2979,7 +3058,7 @@ function renderTableauBord(){
   const carte = (titre, corps, cls, sous) => `<div class="card dash-carte ${cls || ""}"><div class="dash-titre">${titre}</div>${sous ? `<div class="dash-sous">${sous}</div>` : ""}${corps}</div>`;
   const chipStatut = s => `<span class="chip-s ${s === "Approuvé" ? "s-res" : (s === "À approuver" ? "s-cours" : "s-gris")}">${escapeHtml(s || "")}</span>`;
   const lignes = recents.length ? recents.map(r => `<div class="frise" onclick="ouvrirRapport('${r.id}')">
-      <div style="min-width:0;flex:1;"><div style="font-weight:600;font-size:13.5px;">${escapeHtml(numeroRapport(r) ? numeroRapport(r) + " : " : "")}${escapeHtml(r.titre || "Sans titre")}</div><div class="muted" style="font-size:12px;">${escapeHtml(dateLongue(r.date_rapport))}</div></div>${chipStatut(r.statut_rapport)}</div>`).join("")
+      <div style="min-width:0;flex:1;"><div style="font-weight:500;font-size:13.5px;">${escapeHtml(numeroRapport(r) ? numeroRapport(r) + " : " : "")}${escapeHtml(r.titre || "Sans titre")}</div><div class="muted" style="font-size:12px;">${escapeHtml(dateLongue(r.date_rapport))}</div></div>${chipStatut(r.statut_rapport)}</div>`).join("")
     : `<p class="muted center">Aucun rapport pour le moment.</p>`;
   const moyTxt = moy === null ? "-" : String(moy).replace(".", ",");
   return `${entete}
@@ -3138,7 +3217,7 @@ function renderAccueil(){
       <div class="tab ${!isInscription?'active':''}" onclick="state.authTab='connexion';render()">Se connecter</div>
     </div>
     ${isInscription ? `
-      <div style="font-size:19px;font-weight:600;">Bienvenue</div>
+      <div style="font-size:19px;font-weight:500;">Bienvenue</div>
       <div class="muted">Créez votre compte</div>
       <label>Nom complet *</label><input type="text" id="acc-nom" placeholder="Nom complet">
       <label>Courriel *</label><input type="email" id="acc-courriel" placeholder="Courriel">
@@ -3146,10 +3225,11 @@ function renderAccueil(){
       <div class="pwd-wrap"><input type="password" id="acc-mdp" placeholder="Mot de passe"><button type="button" class="toggle-pwd" onclick="togglePwd('acc-mdp', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
       <label>Confirmer le mot de passe *</label>
       <div class="pwd-wrap"><input type="password" id="acc-mdp2" placeholder="Confirmer le mot de passe"><button type="button" class="toggle-pwd" onclick="togglePwd('acc-mdp2', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:400;margin:10px 0;line-height:1.4;"><input type="checkbox" id="acc-cgu" style="width:auto;margin-top:2px;flex:none;"><span>J'accepte les <a href="#" onclick="ouvrirTexteLegal('conditions');return false;">conditions d'utilisation</a> et la <a href="#" onclick="ouvrirTexteLegal('confidentialite');return false;">politique de confidentialité</a>.</span></label>
       <button class="btn btn-primary" id="btn-connexion">Créer mon compte</button>
       <p class="muted" style="margin-top:8px;">* Champs obligatoires</p>
     ` : `
-      <div style="font-size:19px;font-weight:600;">Content de vous revoir</div>
+      <div style="font-size:19px;font-weight:500;">Content de vous revoir</div>
       <div class="muted">Connectez-vous à votre espace chantier</div>
       <label>Courriel *</label><input type="email" id="acc-courriel" placeholder="Courriel">
       <label>Mot de passe *</label>
@@ -3177,7 +3257,7 @@ function renderMesProjets(){
     ${(()=>{
       if(!peutApprouver()) return "";
       const n = state.rapports.filter(r=>r.statut_rapport==="À approuver").length;
-      return n ? `<div class="card" style="border-left:4px solid var(--suspendu);display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:13.5px;font-weight:600;">${n} rapport${n>1?"s":""} à approuver</div><button class="btn btn-warning" style="width:auto;margin:0;padding:8px 14px;" onclick="ouvrirRapportsAApprouver()">Voir</button></div>` : "";
+      return n ? `<div class="card" style="border-left:4px solid var(--suspendu);display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:13.5px;font-weight:500;">${n} rapport${n>1?"s":""} à approuver</div><button class="btn btn-warning" style="width:auto;margin:0;padding:8px 14px;" onclick="ouvrirRapportsAApprouver()">Voir</button></div>` : "";
     })()}
     <div class="card">${filtres}<div id="liste-projets">${htmlListeProjets()}</div></div>
     <button class="btn btn-primary" onclick="go('ajouterProjet')">+ Nouveau projet</button>
@@ -3214,9 +3294,9 @@ function renderDetailProjet(){
   ${header(`<span class="h-trunc">${escapeHtml(p.nom_projet||"Détail projet")}</span>`,"go('mesProjets')")}
   <main>
     <div class="card center">
-      <label>Nom du projet</label><div style="font-size:16px;">${escapeHtml(p.nom_projet||"Nom non disponible")}</div>
-      <label>Adresse</label><div>${escapeHtml(p.adresse_projet||"Adresse non disponible")}</div>
-      <label>Statut</label><span class="status ${escapeHtml(p.statut_projet||'Actif')}" style="margin-top:6px;">${escapeHtml(p.statut_projet||'Actif')}</span>
+      <label class="lib-fiche">Nom du projet</label><div class="fiche-nom">${escapeHtml(p.nom_projet||"Nom non disponible")}</div>
+      <label class="lib-fiche">Adresse</label><div class="fiche-adr">${escapeHtml(p.adresse_projet||"Adresse non disponible")}</div>
+      <label class="lib-fiche">Statut</label><span class="status ${escapeHtml(p.statut_projet||'Actif')}" style="margin-top:6px;">${escapeHtml(p.statut_projet||'Actif')}</span>
     </div>
     <div id="resume-projet">${htmlResumeProjet()}</div>
     ${(estAdmin() && p.statut_projet === "Terminé") ? `<button class="btn btn-danger" style="margin-top:16px;" onclick="supprimerProjet()">Supprimer le projet</button>` : ``}
@@ -3264,7 +3344,7 @@ function renderRevueRapport(){
   ${header("Revue du rapport",retourVers("go('rapportsAApprouver')"))}
   <main>
     <p class="muted">Rédigé par ${escapeHtml(nomMembre(r.utilisateur_id))}. Vérifie le contenu, puis approuve ou renvoie avec un motif.</p>
-    ${r.commentaire_revision ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:600;color:#7A5B00;">Dernier motif de renvoi</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(r.commentaire_revision)}</div></div>` : ""}
+    ${r.commentaire_revision ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:500;color:#7A5B00;">Dernier motif de renvoi</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(r.commentaire_revision)}</div></div>` : ""}
     <div class="pdf-preview">
       <h2>${escapeHtml(f.titre||"Rapport de chantier")}</h2>
       <div class="meta">${r.date_rapport ? formatDateRapport(r.date_rapport) : ""} · Météo: ${escapeHtml(f.meteo||"-")} · Travailleurs: ${escapeHtml(String(f.nb_travailleurs||"-"))}</div>
@@ -3417,7 +3497,7 @@ function renderMonProfil(){
   ${header("Mon profil","go('mesProjets')")}
   <main>
     <div class="card">
-      <div style="font-size:15px;font-weight:600;">${escapeHtml(u.nom||"")}</div>
+      <div style="font-size:15px;font-weight:500;">${escapeHtml(u.nom||"")}</div>
       <div class="muted">${escapeHtml(u.courriel||"")}</div>
       <div style="margin-top:8px;"><span style="font-size:11px;padding:4px 8px;border-radius:5px;background:#E6F4EA;color:#1E7B34;">${escapeHtml(u.role||"")}</span></div>
       <div class="muted" style="margin-top:8px;">${escapeHtml((state.entreprise&&state.entreprise.nom_entreprise)||"")}</div>
@@ -3534,7 +3614,7 @@ function renderGenerationIA(){
     return `${entete}
     <main>
       <div class="card" style="border-left:4px solid var(--refuse);">
-        <div style="font-weight:600;color:var(--refuse);">La génération a échoué</div>
+        <div style="font-weight:500;color:var(--refuse);">La génération a échoué</div>
         <div style="font-size:13px;margin-top:6px;white-space:pre-wrap;">${escapeHtml(state.erreurGeneration)}</div>
       </div>
       <p class="muted">Aucun rapport n'a été créé. Tu peux réessayer ou revenir au formulaire.</p>
@@ -3561,10 +3641,10 @@ function renderGenerationIA(){
 
   return `${entete}
   <main>
-    <p style="color:var(--green);font-weight:600;">✓ ${state.rapportEnEdition ? "Brouillon ouvert" : "Rapport généré"}</p>
+    <p style="color:var(--green);font-weight:500;">✓ ${state.rapportEnEdition ? "Brouillon ouvert" : "Rapport généré"}</p>
     ${htmlAlerteControleIA()}
-    ${(state.valeursAbsentesIA && state.valeursAbsentesIA.length) ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:600;color:#7A5B00;">À vérifier avant d'approuver</div><p class="muted" style="margin:6px 0 0;">Ces valeurs de ta saisie ne semblent pas reprises dans le rapport : ${state.valeursAbsentesIA.map(v => "<strong>" + escapeHtml(v) + "</strong>").join(", ")}. Ajoute-les au texte au besoin.</p></div>` : ""}
-    ${(re && re.commentaire_revision) ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:600;color:#7A5B00;">Rapport renvoyé: à corriger</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(re.commentaire_revision)}</div></div>` : ""}
+    ${(state.valeursAbsentesIA && state.valeursAbsentesIA.length) ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:500;color:#7A5B00;">À vérifier avant d'approuver</div><p class="muted" style="margin:6px 0 0;">Ces valeurs de ta saisie ne semblent pas reprises dans le rapport : ${state.valeursAbsentesIA.map(v => "<strong>" + escapeHtml(v) + "</strong>").join(", ")}. Ajoute-les au texte au besoin.</p></div>` : ""}
+    ${(re && re.commentaire_revision) ? `<div class="card" style="border-left:4px solid var(--suspendu);"><div style="font-size:12px;font-weight:500;color:#7A5B00;">Rapport renvoyé: à corriger</div><div style="font-size:13px;margin-top:4px;">${escapeHtml(re.commentaire_revision)}</div></div>` : ""}
     <p class="muted">Voici la page telle qu'elle sera dans le PDF. Clique dans un texte pour le modifier. Glisse une photo pour la déplacer (entre deux paragraphes, ou sur le côté d'une autre photo pour les mettre côte à côte) et tire la poignée verte pour changer sa taille. Les petites icônes au-dessus d'une photo permettent de la monter, la descendre, la placer à côté de la précédente, modifier sa légende ou la retirer. L'IA n'a utilisé que ce que tu as saisi et ce qui est visible sur les photos.</p>
     ${champsSections}
     ${blocPhotos}
@@ -3646,7 +3726,7 @@ function renderOnboarding1(){
         ${state.onboardingForm.logoBase64
           ? `<img src="data:${state.onboardingForm.logoMimeType};base64,${state.onboardingForm.logoBase64}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 6px;display:block;">`
           : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed var(--border);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:var(--grey);font-size:24px;">🏢</div>`}
-        <p style="color:var(--green);font-size:13px;font-weight:600;">${state.onboardingForm.logoBase64 ? "Changer le logo" : "Appuyer pour ajouter un logo (optionnel)"}</p>
+        <p style="color:var(--green);font-size:13px;font-weight:500;">${state.onboardingForm.logoBase64 ? "Changer le logo" : "Appuyer pour ajouter un logo (optionnel)"}</p>
       </label>
       <input type="file" id="ob-logo-upload" accept="image/*" style="display:none;">
     </div>
@@ -3654,199 +3734,4 @@ function renderOnboarding1(){
     <label>Numéro RBQ *</label><input type="text" id="ob-rbq" value="${f.numero_rbq}" placeholder="Ex: 5678-9012-34">
     <label>Adresse du siège social</label><input type="text" id="ob-adresse" value="${f.adresse}" placeholder="Ex: 123 rue Principale, M...">
     <label>Email de facturation</label><input type="email" id="ob-email" value="${f.email}" placeholder="Ex: facturation@constru...">
-    <label>Contact d'urgence</label><input type="text" id="ob-urgence" value="${f.contact_urgence}" placeholder="Ex: Jean Tremblay, 514-5...">
-    <button class="btn btn-primary" id="btn-onboarding1">Continuer</button>
-    <p class="muted center" style="margin-top:8px;">* Champs obligatoires</p>
-  </main>`;
-}
-
-function renderOnboarding2(){
-  const f = state.onboardingForm;
-  return `
-  ${header("Créer mon entreprise","go('onboardingEtape1')")}
-  <div style="height:8px;background:#ECEFF1;"><div style="height:8px;width:100%;background:var(--accent);"></div></div>
-  <main>
-    <p class="muted center">Étape 2 sur 2 — Confirmation de votre entreprise</p>
-    <div class="center" style="margin:14px 0;">
-      <div style="width:60px;height:60px;border-radius:50%;background:var(--green);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">✓</div>
-      <p style="font-weight:600;color:var(--green);">Vérifiez vos informations</p>
-      <p class="muted">Vous pourrez les modifier plus tard dans Mon entreprise</p>
-    </div>
-    <div class="card">
-      ${champIcone("immeuble","",f.nom_entreprise,{readonly:true})}
-      ${champIcone("licence","",f.numero_rbq,{readonly:true})}
-      ${champIcone("lieu","",f.adresse,{readonly:true})}
-      ${champIcone("courriel","",f.email,{readonly:true})}
-      ${champIcone("telephone","",f.contact_urgence,{readonly:true})}
-    </div>
-    <button class="btn btn-primary" id="btn-terminer-onboarding">Créer mon entreprise</button>
-  </main>`;
-}
-
-function renderAccepterInvitation(){
-  const inv = state.invitationData || {};
-  const pwdIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>`;
-  return `
-  ${header("Rejoindre l'entreprise")}
-  <main style="padding-top:14px;">
-    <div class="logo-block">
-      <img src="data:image/png;base64,${state.logoBase64}" style="width:150px;height:auto;margin:0 auto;display:block;">
-    </div>
-    <p class="muted center">Tu as été invité(e) à rejoindre <strong>${escapeHtml(inv.entreprise_nom||"l'entreprise")}</strong> en tant que <strong>${escapeHtml(inv.role||"")}</strong>.</p>
-    <label>Courriel</label>
-    <input type="text" value="${escapeHtml(inv.email||"")}" disabled>
-    <label>Choisis un mot de passe *</label>
-    <div class="pwd-wrap"><input type="password" id="ai-mdp" placeholder="Mot de passe">
-      <button type="button" class="toggle-pwd" onclick="togglePwd('ai-mdp', this)">${pwdIcon}</button></div>
-    <label>Confirme le mot de passe *</label>
-    <div class="pwd-wrap"><input type="password" id="ai-mdp2" placeholder="Confirmer le mot de passe">
-      <button type="button" class="toggle-pwd" onclick="togglePwd('ai-mdp2', this)">${pwdIcon}</button></div>
-    <button class="btn btn-primary" id="ai-confirmer" onclick="accepterInvitation()">Créer mon compte</button>
-  </main>`;
-}
-
-function dbBadge(){
-  if(state.dbStatus==="ok") return `<div class="badge-ok">✓ Enregistré dans Supabase</div>`;
-  if(state.dbStatus==="fallback") return `<div class="badge-sim">⚠ Supabase indisponible — sauvegardé localement pour ce test seulement.<br><span style="font-family:monospace;font-size:10px;">${escapeHtml(lastDbError)}</span></div>`;
-  return "";
-}
-function escapeHtml(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
-function formatRapportAffichage(s){ return escapeHtml(sansMarqueurs(s)).replace(/^## (.+)$/gm, '<strong style="color:var(--green)">$1</strong>'); }
-
-function attachHandlers(){
-  const b1 = document.getElementById("btn-connexion");
-  if(b1) b1.onclick = ()=>{
-    const nom = document.getElementById("acc-nom") ? document.getElementById("acc-nom").value.trim() : "";
-    const courriel = document.getElementById("acc-courriel").value.trim();
-    const mdp = document.getElementById("acc-mdp") ? document.getElementById("acc-mdp").value : "";
-    if(state.authTab==='inscription'){
-      const mdp2 = document.getElementById("acc-mdp2") ? document.getElementById("acc-mdp2").value : "";
-      if(!nom){ showToast("Le nom complet est requis."); return; }
-      if(!courriel || !courriel.includes("@")){ showToast("Un courriel valide est requis."); return; }
-      if(!mdp || mdp.length < 6){ showToast("Le mot de passe doit contenir au moins 6 caractères."); return; }
-      if(mdp !== mdp2){ showToast("Les mots de passe ne correspondent pas."); return; }
-      commencerCreationCompte(nom, courriel, mdp);
-    }else{
-      if(!courriel || !courriel.includes("@")){ showToast("Un courriel valide est requis."); return; }
-      if(!mdp){ showToast("Le mot de passe est requis."); return; }
-      seConnecter(nom, courriel, mdp);
-    }
-  };
-  const b2 = document.getElementById("btn-creer-projet");
-  if(b2) b2.onclick = ()=>{
-    const nom = document.getElementById("np-nom").value;
-    const adresse = document.getElementById("np-adresse").value;
-    const type = document.getElementById("np-type").value;
-    const desc = document.getElementById("np-desc").value;
-    if(!nom || !adresse){ showToast("Nom et adresse sont requis."); return; }
-    creerProjet(nom, adresse, type || null, desc);
-  };
-  const p = document.getElementById("rf-photos");
-  if(p) p.onchange = (e)=> ajouterPhotos(e.target.files);
-  const champIds = { titre:"rf-titre", date_rapport:"rf-date", description:"rf-description", observations:"rf-observations", actions:"rf-actions", portee:"rf-portee", visiteurs:"rf-visiteurs", epi:"rf-epi", meteo:"rf-meteo", nb_travailleurs:"rf-nb" };
-  Object.keys(champIds).forEach(k=>{
-    const elm = document.getElementById(champIds[k]);
-    if(elm){
-      elm.oninput = (e)=>{ if(k === "nb_travailleurs"){ const v = e.target.value.replace(/\D/g, "").slice(0, 3); if(v !== e.target.value) e.target.value = v; } state.rapportForm[k] = e.target.value; if(elm.tagName === "TEXTAREA") ajusterHauteur(elm); };
-      if(elm.tagName === "TEXTAREA") ajusterHauteur(elm);
-    }
-  });
-  const bg = document.getElementById("btn-generer");
-  if(bg) bg.onclick = ()=>{ if(!state.rapportForm.titre){ showToast("Le titre est requis."); return; } genererRapport(); };
-  document.querySelectorAll(".pe-par").forEach(t => { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; });
-  initialiserGlisser();
-  { const tl = document.querySelector(".pe-leg"); if(tl){ tl.focus(); tl.setSelectionRange(tl.value.length, tl.value.length); } }
-  const ba = document.getElementById("btn-approuver"); if(ba) ba.onclick = ()=>enregistrerRapport(statutCibleValidation());
-  const bbr = document.getElementById("btn-brouillon"); if(bbr) bbr.onclick = ()=>enregistrerRapport("Brouillon");
-  const br = document.getElementById("btn-regenerer"); if(br) br.onclick = regenererAvecConfirmation;
-  const baf = document.getElementById("btn-approuver-final"); if(baf) baf.onclick = ()=>enregistrerRapport(statutCibleValidation());
-  const bt = document.getElementById("btn-telecharger"); if(bt) bt.onclick = genererPDF;
-  const be = document.getElementById("btn-envoyer"); if(be) be.onclick = envoyerSimule;
-  const logoInput = document.getElementById("ob-logo-upload");
-  if(logoInput) logoInput.onchange = async (e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const b64 = await fileToBase64(file);
-    state.onboardingForm.logoBase64 = b64;
-    state.onboardingForm.logoMimeType = file.type;
-    state.onboardingForm.logoFichier = file;
-    render();
-  };
-  const bo1 = document.getElementById("btn-onboarding1");
-  if(bo1) bo1.onclick = ()=>{
-    const nom = document.getElementById("ob-nom").value;
-    const rbq = document.getElementById("ob-rbq").value;
-    if(!nom || !rbq){ showToast("Nom de l'entreprise et numéro RBQ sont requis."); return; }
-    state.onboardingForm = {
-      ...state.onboardingForm,
-      nom_entreprise: nom, numero_rbq: rbq,
-      adresse: document.getElementById("ob-adresse").value,
-      email: document.getElementById("ob-email").value,
-      contact_urgence: document.getElementById("ob-urgence").value
-    };
-    go("onboardingEtape2");
-  };
-  const bt3 = document.getElementById("btn-terminer-onboarding");
-  if(bt3) bt3.onclick = ()=>{ terminerOnboarding(); };
-  const logoEnt = document.getElementById("ent-logo-input");
-  if(logoEnt) logoEnt.onchange = async (ev)=>{ const f = ev.target.files[0]; ev.target.value = ""; if(f) await televerserLogoEntreprise(f); };
-  const bge = document.getElementById("btn-enregistrer-entreprise");
-  if(bge){
-    bge.onclick = enregistrerEntreprise;
-    const ids = ["ge-nom","ge-rbq","ge-adresse","ge-email","ge-urgence"];
-    const e0 = state.entreprise || {};
-    const init = { "ge-nom":e0.nom_entreprise||"", "ge-rbq":e0.numero_rbq||"", "ge-adresse":e0.adresse_siege||"", "ge-email":e0.email_facturation||"", "ge-urgence":e0.contact_urgence||"" };
-    const verifier = ()=>{
-      let change = false;
-      ids.forEach(id=>{ if(document.getElementById(id).value !== init[id]) change = true; });
-      bge.disabled = !change;
-    };
-    ids.forEach(id=>{ const inp = document.getElementById(id); if(inp) inp.addEventListener("input", ()=>{ const fi = document.getElementById("fi-"+id); if(fi) fi.classList.remove("invalide"); verifier(); }); });
-  }
-}
-
-/* ================= DÉMARRAGE ================= */
-(async function demarrer(){
-  const invite = detecterInvitation();
-  if(invite && invite.access_token){
-    history.replaceState(null, "", window.location.pathname); // nettoie le token de l'URL
-    state.accessToken = invite.access_token;
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: authHeaders() });
-    if(res.ok){
-      const u = await res.json();
-      state.authUser = u;
-      state.invitationData = {
-        email: u.email,
-        role: u.user_metadata?.role || "Employé",
-        entreprise_id: u.user_metadata?.entreprise_id || null,
-        entreprise_nom: u.user_metadata?.entreprise_nom || "",
-        invitation_id: u.user_metadata?.invitation_id || null
-      };
-      state.view = "accepterInvitation";
-      render();
-      return;
-    }else{
-      state.accessToken = null;
-      showToast("Lien d'invitation invalide ou expiré.");
-    }
-  }
-  const session = chargerSessionSauvegardee();
-  if(session && session.accessToken && session.authUser){
-    state.accessToken = session.accessToken;
-    state.authUser = session.authUser;
-    render(); // affiche un écran vide pendant la vérification
-    const test = await sbSelect("Utilisateurs", `select=id&auth_id=eq.${state.authUser.id}&limit=1`);
-    if(test !== null){
-      await chargerEspaceUtilisateur();
-      return;
-    }else{
-      effacerSession();
-      state.accessToken = null;
-      state.authUser = null;
-    }
-  }
-  render();
-})();
-</script>
-</body>
-</html>
+    <label>Contact d'urgence</label><input type="text" id="ob-urgence" value="${f.contact_urgence}" placeholder="Ex: Jean Trem
